@@ -11,6 +11,7 @@ ENV PORT 8080
 ENV FLASK_APP app
 ENV FLASK_RUN_PORT $PORT
 ENV FLASK_ENV=production
+ENV BASE_URL=https://laundromat.signalnoise.tools
 
 COPY . /code/
 WORKDIR /code
