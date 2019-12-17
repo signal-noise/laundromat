@@ -1,14 +1,17 @@
 # from https://developers.google.com/identity/protocols/OAuth2WebServer
-import google.oauth2.credentials
+# import google.oauth2.credentials
 import google_auth_oauthlib.flow
+
 
 def get_flow(state=None):
     args = ['/config/client_secret.json',
-        ['https://www.googleapis.com/auth/spreadsheets']]
+            ['https://www.googleapis.com/auth/spreadsheets']]
     kwargs = {}
     if state is not None:
         kwargs['state'] = state
-    return google_auth_oauthlib.flow.Flow.from_client_secrets_file(*args, **kwargs)
+    return google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+            *args, **kwargs)
+
 
 def get_auth_url(redirect_url):
     flow = get_flow()
