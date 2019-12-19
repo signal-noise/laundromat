@@ -13,3 +13,4 @@ services:
       - FLASK_ENV=development
       - OAUTHLIB_INSECURE_TRANSPORT=1
       - BASE_URL=http://localhost:8080
+      - GOOGLE_APPLICATION_CREDENTIALS=/config/service_account.json

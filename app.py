@@ -1,5 +1,18 @@
-from flask import Flask, redirect, render_template, request, url_for
+from flask import (Flask, redirect, render_template, request, url_for)
+from flask_session_plus import Session
+from google.cloud import firestore
 import google_auth_oauthlib.flow
+
+SESSION_CONFIG = [
+    {
+        'cookie_name': 'session',
+        'session_type': 'firestore',
+        'session_fields': '[]',
+        'client': firestore.Client(),
+        'collection': 'sessions'
+    },
+]
+
 
 app = Flask(__name__)
 
@@ -45,7 +58,12 @@ def index():
 def trigger_google_auth():
     (url, state) = get_auth_url(
         url_for('process_google_auth_response', _external=True))
-    return redirect(url)
+    # session = Session()
+    # session.init_app(app)
+    # session.app = { 'state': state }
+    print(session)
+    return render_template('index.html', title='test', message=session)
+    # return redirect(url)
 
 
 @app.route('/oauth2callback')
@@ -56,13 +74,23 @@ def process_google_auth_response():
                                title="oAuth Error",
                                message=error)
 
-    flow = get_flow(request.args['state'])
+    # session = Session()
+    # session.init_app(app)
+    # if session.app.get('credentials') is not None:
+    #     credentials = session.app.credentials
+    # else:
+    state = request.args.get('state')
+    if state is None:
+        return render_template('index.html', title='oops', message='no credentials')
+
+    flow = get_flow(state)
     flow.redirect_uri = url_for('process_google_auth_response', _external=True)
 
     authorization_response = request.url
     flow.fetch_token(authorization_response=authorization_response)
 
     credentials = flow.credentials
+        # session.credentials = credentials
     return render_template('index.html',
                            title="success",
                            message=credentials.token)
