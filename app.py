@@ -1,9 +1,28 @@
-# import os
+from flask import Flask, redirect, render_template, request, url_for
+import google_auth_oauthlib.flow
 
-from flask import redirect, render_template, request, url_for
-from app import app
+app = Flask(__name__)
 
-from app.auth import get_auth_url, get_flow
+
+def get_flow(state=None):
+    args = ['/config/client_secret.json',
+            ['https://www.googleapis.com/auth/spreadsheets']]
+    kwargs = {}
+    if state is not None:
+        kwargs['state'] = state
+    return google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+            *args, **kwargs)
+
+
+def get_auth_url(redirect_url):
+    flow = get_flow()
+    flow.redirect_uri = redirect_url or url_for('process_google_auth_response', _external=True)
+
+    authorization_url, state = flow.authorization_url(
+        access_type='offline',
+        include_granted_scopes='true')
+
+    return (authorization_url, state)
 
 
 def no_spreadsheet_id():
@@ -38,8 +57,7 @@ def process_google_auth_response():
                                message=error)
 
     flow = get_flow(request.args['state'])
-    flow.redirect_uri = 'https://f467a14e.ngrok.io/oauth2callback'
-    # url_for('process_google_auth_response', _external=True)
+    flow.redirect_uri = url_for('process_google_auth_response', _external=True)
 
     authorization_response = request.url
     flow.fetch_token(authorization_response=authorization_response)
