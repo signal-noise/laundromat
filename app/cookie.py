@@ -11,6 +11,11 @@ class Cookie:
         self.retrieve_session_cookie(request)
         self.session = Session(self.uid)
 
+    def reset(self):
+        self.session.remove()
+        self.uid = self.generate_uuid()
+        self.session = Session(self.uid)
+
     def get_session(self):
         return self.session
 

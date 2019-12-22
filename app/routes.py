@@ -7,24 +7,35 @@ from app.cookie import Cookie
 @app.route('/')
 def index():
     c = Cookie(request)
-    google_creds = c.session.get('credentials')
+    google_creds = c.session.get('google_credentials')
     if google_creds is not None and google_creds != {}:
-        (title, message) = ('great', c.session.get('credentials'))
+        spreadsheet_id = request.args.get('s')
+        if spreadsheet_id is not None:
+            c.session.set('spreadsheet_id', spreadsheet_id)
+            return c.redirect(url_for('trigger_github_auth'))
+        else:
+            (title, message) = ('great', 'choose a sheet (?s=xxx)')
     else:
-        return c.redirect(url_for('trigger_google_auth', _external=True))
+        return c.redirect(url_for('trigger_google_auth'))
 
     return c.render_template('index.html', title=title, message=message)
 
 
-@app.route('/authenticate')
+@app.route('/logout')
+def kill_auth():
+    c = Cookie(request)
+    c.reset()
+    return c.render_template(title='logged out', message='go to / to start again')
+
+
+@app.route('/google_auth')
 def trigger_google_auth():
     c = Cookie(request)
     flow = get_flow()
-    flow.redirect_uri = url_for('process_google_auth_response', _external=True)
     url, state = flow.authorization_url(
         access_type='offline',
         include_granted_scopes='true')
-    c.session.save('state', state)
+    c.session.set('state', state)
     return c.redirect(url)
 
 
@@ -38,11 +49,9 @@ def process_google_auth_response():
                                  message=error)
     state = c.session.get('state')
     flow = get_flow(state)
-    flow.redirect_uri = url_for('process_google_auth_response', _external=True)
-    authorization_response = request.url
-    flow.fetch_token(authorization_response=authorization_response)
+    flow.fetch_token(authorization_response=request.url)
     credentials = flow.credentials
-    c.session.save('credentials', {
+    c.session.set('google_credentials', {
         'token': credentials.token,
         'refresh_token': credentials.refresh_token,
         'token_uri': credentials.token_uri,
@@ -50,4 +59,11 @@ def process_google_auth_response():
         'client_secret': credentials.client_secret,
         'scopes': credentials.scopes}
     )
+    c.session.delete('state')
     return c.redirect('/')
+
+
+@app.route('/github_auth')
+def trigger_github_auth():
+    c = Cookie(request)
+    return c.render_template('index.html', title='GH', message='okaaay')
