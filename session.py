@@ -27,7 +27,8 @@ class Session:
             return doc_dict
 
     def save(self, key, value):
-        expires_at = datetime.datetime.utcnow() + datetime.timedelta(self.expiry)
+        expires_at = (datetime.datetime.utcnow()
+                      + datetime.timedelta(self.expiry))
         doc_dict = self.get()
         doc_dict[key] = value
         doc_dict['expires_at'] = expires_at.timestamp()

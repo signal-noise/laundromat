@@ -1,5 +1,5 @@
-import datetime
-from flask import Flask, render_template, request, jsonify, abort, make_response
+
+from flask import Flask, render_template, request
 from cookie import Cookie
 
 
@@ -26,7 +26,8 @@ def index():
 def set_session():
     c = Cookie(request)
     c.session.save('state', 'foo bar')
-    return c.render_template('index.html', title='set', message=c.session.get())
+    return c.render_template(
+        'index.html', title='set', message=c.session.get())
 
 
 @app.route('/get')
