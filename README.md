@@ -30,7 +30,9 @@ G Suite / Github permissions?
 
 # Developing
 
-Set up a GCP Project. Use the [Library](https://console.developers.google.com/apis/library) page to select the Sheets API and enable it. Set up a [Firestore](https://console.cloud.google.com/firestore/data) (native) database.
+Set up a GCP Project. Set up a [Firestore](https://console.cloud.google.com/firestore/data) (native) database. You'll need a service account and JSON file along with it. The service account needs thr `Firebase Rules System` permission.
+
+Use the [Library](https://console.developers.google.com/apis/library) page to select the Sheets API and enable it. 
 
 On the [Credentials](https://console.developers.google.com/apis/credentials) page click **Create Credentials > OAuth client ID**. Choose a Web Application type and give it a name. You'll need to set `http://localhost:8080` as an authorized URI during development, and update this once you deploy to a live environment.
 

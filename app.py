@@ -1,20 +1,13 @@
 from flask import (Flask, redirect, render_template, request, url_for)
-from flask_session_plus import Session
-from google.cloud import firestore
 import google_auth_oauthlib.flow
-
-SESSION_CONFIG = [
-    {
-        'cookie_name': 'session',
-        'session_type': 'firestore',
-        'session_fields': '[]',
-        'client': firestore.Client(),
-        'collection': 'sessions'
-    },
-]
+from cookie import Cookie
 
 
 app = Flask(__name__)
+
+
+def no_spreadsheet_id():
+    return ('Error', "You must set a Spreadsheet ID from Google Sheets")
 
 
 def get_flow(state=None):
@@ -24,22 +17,7 @@ def get_flow(state=None):
     if state is not None:
         kwargs['state'] = state
     return google_auth_oauthlib.flow.Flow.from_client_secrets_file(
-            *args, **kwargs)
-
-
-def get_auth_url(redirect_url):
-    flow = get_flow()
-    flow.redirect_uri = redirect_url or url_for('process_google_auth_response', _external=True)
-
-    authorization_url, state = flow.authorization_url(
-        access_type='offline',
-        include_granted_scopes='true')
-
-    return (authorization_url, state)
-
-
-def no_spreadsheet_id():
-    return ('Error', "You must set a Spreadsheet ID from Google Sheets")
+        *args, **kwargs)
 
 
 @app.route('/')
@@ -56,14 +34,14 @@ def index():
 
 @app.route('/authenticate')
 def trigger_google_auth():
-    (url, state) = get_auth_url(
-        url_for('process_google_auth_response', _external=True))
-    # session = Session()
-    # session.init_app(app)
-    # session.app = { 'state': state }
-    print(session)
-    return render_template('index.html', title='test', message=session)
-    # return redirect(url)
+    c = Cookie(request)
+    flow = get_flow()
+    flow.redirect_uri = url_for('process_google_auth_response', _external=True)
+    url, state = flow.authorization_url(
+        access_type='offline',
+        include_granted_scopes='true')
+    c.session.save('state', state)
+    return redirect(url)
 
 
 @app.route('/oauth2callback')
@@ -73,24 +51,21 @@ def process_google_auth_response():
         return render_template('index.html',
                                title="oAuth Error",
                                message=error)
-
-    # session = Session()
-    # session.init_app(app)
-    # if session.app.get('credentials') is not None:
-    #     credentials = session.app.credentials
-    # else:
-    state = request.args.get('state')
-    if state is None:
-        return render_template('index.html', title='oops', message='no credentials')
-
+    c = Cookie(request)
+    state = c.session.get('state')
     flow = get_flow(state)
     flow.redirect_uri = url_for('process_google_auth_response', _external=True)
-
     authorization_response = request.url
     flow.fetch_token(authorization_response=authorization_response)
-
     credentials = flow.credentials
-        # session.credentials = credentials
+    c.session.save('credentials', {
+        'token': credentials.token,
+        'refresh_token': credentials.refresh_token,
+        'token_uri': credentials.token_uri,
+        'client_id': credentials.client_id,
+        'client_secret': credentials.client_secret,
+        'scopes': credentials.scopes}
+    )
     return render_template('index.html',
                            title="success",
                            message=credentials.token)
