@@ -1,15 +1,9 @@
 import datetime
 from flask import Flask, render_template, request, jsonify, abort, make_response
-from session import Session
+from cookie import Cookie
 
-import uuid
 
 app = Flask(__name__)
-
-# uid and cookie bits
-
-uid = str(uuid.uuid4())
-session = Session(uid)
 
 
 def no_spreadsheet_id():
@@ -30,14 +24,13 @@ def index():
 
 @app.route('/set')
 def set_session():
-    session.save('state', 'blah blah')
-    resp = make_response(render_template(
-        'index.html', title='set', message=session.get()))
-    resp.set_cookie('session', uid)
-    return resp
+    c = Cookie(request)
+    c.session.save('state', 'foo bar')
+    return c.render_template('index.html', title='set', message=c.session.get())
 
 
 @app.route('/get')
 def get_session():
-    message = session.get('state')
+    c = Cookie(request)
+    message = c.session.get('state')
     return render_template('index.html', title='get', message=message)
