@@ -2,11 +2,13 @@ import datetime
 from flask import Flask, render_template, request, jsonify, abort, make_response
 from session import Session
 
+import uuid
+
 app = Flask(__name__)
 
 # uid and cookie bits
 
-uid = 'marcel@signal-noise.co.uk'
+uid = str(uuid.uuid4())
 session = Session(uid)
 
 
@@ -29,7 +31,8 @@ def index():
 @app.route('/set')
 def set_session():
     session.save('state', 'blah blah')
-    resp = make_response(render_template('index.html', title='set', message=session.get()))
+    resp = make_response(render_template(
+        'index.html', title='set', message=session.get()))
     resp.set_cookie('session', uid)
     return resp
 
@@ -38,5 +41,3 @@ def set_session():
 def get_session():
     message = session.get('state')
     return render_template('index.html', title='get', message=message)
-
-
