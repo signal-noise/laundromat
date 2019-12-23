@@ -1,7 +1,24 @@
 from flask import request, url_for
+from authlib.integrations.flask_client import OAuth
+# use loginpass to make OAuth connection simpler
+# from loginpass import create_flask_blueprint, GitHub
 from app import app
 from app.auth import get_flow
 from app.cookie import Cookie
+
+app.secret_key = 'super secret key'
+oauth = OAuth(app)
+oauth.register(
+    name='github',
+    client_id='Iv1.f8a8a30514384efa',
+    client_secret='eccccf8520b1d0179cd76e68aa0fcecbb2088a8c',
+    access_token_url='https://github.com/login/oauth/access_token',
+    access_token_params=None,
+    authorize_url='https://github.com/login/oauth/authorize',
+    authorize_params=None,
+    api_base_url='https://api.github.com/',
+    client_kwargs={'scope': 'user:email'},
+)
 
 
 @app.route('/')
@@ -9,7 +26,9 @@ def index():
     c = Cookie(request)
     google_creds = c.session.get('google_credentials')
     if google_creds is not None and google_creds != {}:
-        spreadsheet_id = request.args.get('s')
+        spreadsheet_id = c.session.get('spreadsheet_id')
+        if spreadsheet_id is None:
+            spreadsheet_id = request.args.get('s')
         if spreadsheet_id is not None:
             c.session.set('spreadsheet_id', spreadsheet_id)
             return c.redirect(url_for('trigger_github_auth'))
@@ -63,7 +82,23 @@ def process_google_auth_response():
     return c.redirect('/')
 
 
-@app.route('/github_auth')
+@app.route('/login')
 def trigger_github_auth():
+    redirect_uri = url_for('authorize', _external=True)
+    return oauth.github.authorize_redirect(redirect_uri)
+
+
+@app.route('/authorize')
+def authorize():
     c = Cookie(request)
-    return c.render_template('index.html', title='GH', message='okaaay')
+    token = oauth.github.authorize_access_token()
+    c.session.set('github_token', token)
+    return c.redirect('/test')
+
+
+@app.route('/test')
+def repos():
+    c = Cookie(request)
+    resp = oauth.github.get('/user/repos')
+    repos = resp.json()
+    return c.render_template(title='err', message=repos)
