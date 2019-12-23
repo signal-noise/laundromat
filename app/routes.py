@@ -31,7 +31,11 @@ def index():
             spreadsheet_id = request.args.get('s')
         if spreadsheet_id is not None:
             c.session.set('spreadsheet_id', spreadsheet_id)
-            return c.redirect(url_for('trigger_github_auth'))
+            github_token = c.session.get('github_token')
+            if github_token is not None:
+                return c.redirect('/test')
+            else:
+                return c.redirect(url_for('trigger_github_auth'))
         else:
             (title, message) = ('great', 'choose a sheet (?s=xxx)')
     else:
@@ -99,6 +103,6 @@ def authorize():
 @app.route('/test')
 def repos():
     c = Cookie(request)
-    resp = oauth.github.get('/user/repos')
+    resp = oauth.github.get('/user/repos', token=c.session.get('github_token'))
     repos = resp.json()
-    return c.render_template(title='err', message=repos)
+    return c.render_template(title='choose a repo', message=repos)
