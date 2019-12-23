@@ -47,7 +47,8 @@ def index():
 def kill_auth():
     c = Cookie(request)
     c.reset()
-    return c.render_template(title='logged out', message='go to / to start again')
+    return c.render_template(
+        title='logged out', message='go to / to start again')
 
 
 @app.route('/google_auth')
