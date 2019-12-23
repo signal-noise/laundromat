@@ -26,15 +26,28 @@ class Session:
         else:
             return doc_dict
 
-    def save(self, key, value):
-        expires_at = (datetime.datetime.utcnow()
-                      + datetime.timedelta(self.expiry))
+    def set(self, key, value):
         doc_dict = self.get()
         doc_dict[key] = value
-        doc_dict['expires_at'] = expires_at.timestamp()
-        self.doc_ref.set(doc_dict)
+        return self.save(doc_dict)
+
+    def save(self, dict):
+        expires_at = (datetime.datetime.utcnow()
+                      + datetime.timedelta(self.expiry))
+        dict['expires_at'] = expires_at.timestamp()
+        self.doc_ref.set(dict)
         return self
+
+    def delete(self, key):
+        doc_dict = self.doc_ref.get().to_dict()
+        if doc_dict is None:
+            return {}
+        value = doc_dict.pop(key, None)
+        if value is None:
+            return f'Key {key} was not found on the session'
+        return self.save(doc_dict)
 
     def remove(self):
         self.doc_ref.set({})
+        self.doc_ref.delete()
         return self
