@@ -1,7 +1,6 @@
 from flask import request, url_for
 from authlib.integrations.flask_client import OAuth
-# use loginpass to make OAuth connection simpler
-# from loginpass import create_flask_blueprint, GitHub
+import os
 from app import app
 from app.auth import get_flow
 from app.cookie import Cookie
@@ -10,8 +9,8 @@ app.secret_key = 'super secret key'
 oauth = OAuth(app)
 oauth.register(
     name='github',
-    client_id='Iv1.f8a8a30514384efa',
-    client_secret='eccccf8520b1d0179cd76e68aa0fcecbb2088a8c',
+    client_id=os.environ.get('GITHUB_CLIENT_ID'),
+    client_secret=os.environ.get('GITHUB_CLIENT_SECRET'),
     access_token_url='https://github.com/login/oauth/access_token',
     access_token_params=None,
     authorize_url='https://github.com/login/oauth/authorize',
