@@ -1,23 +1,18 @@
 from flask import request, url_for
-from authlib.integrations.flask_client import OAuth
-import os
 from app import app
-from app.auth import get_flow
+from app.google import (
+    complete_auth as complete_google_auth,
+    get_all_sheets,
+    get_auth_url as get_google_auth_url,
+)
+from app.github import (
+    complete_auth as complete_github_auth,
+    get_all_repos,
+    get_auth_url as get_github_auth_url,
+)
 from app.cookie import Cookie
 
 app.secret_key = 'super secret key'
-oauth = OAuth(app)
-oauth.register(
-    name='github',
-    client_id=os.environ.get('GITHUB_CLIENT_ID'),
-    client_secret=os.environ.get('GITHUB_CLIENT_SECRET'),
-    access_token_url='https://github.com/login/oauth/access_token',
-    access_token_params=None,
-    authorize_url='https://github.com/login/oauth/authorize',
-    authorize_params=None,
-    api_base_url='https://api.github.com/',
-    client_kwargs={'scope': 'user:email'},
-)
 
 
 @app.route('/')
@@ -32,7 +27,7 @@ def index():
             c.session.set('spreadsheet_id', spreadsheet_id)
             github_token = c.session.get('github_token')
             if github_token is not None:
-                return c.redirect('/test')
+                return c.redirect('/test_github')
             else:
                 return c.redirect(url_for('trigger_github_auth'))
         else:
@@ -44,7 +39,7 @@ def index():
 
 
 @app.route('/logout')
-def kill_auth():
+def logout():
     c = Cookie(request)
     c.reset()
     return c.render_template(
@@ -54,15 +49,11 @@ def kill_auth():
 @app.route('/google_auth')
 def trigger_google_auth():
     c = Cookie(request)
-    flow = get_flow()
-    url, state = flow.authorization_url(
-        access_type='offline',
-        include_granted_scopes='true')
-    c.session.set('state', state)
+    url = get_google_auth_url(c)
     return c.redirect(url)
 
 
-@app.route('/oauth2callback')
+@app.route('/google_oauth2callback')
 def process_google_auth_response():
     c = Cookie(request)
     error = request.args.get('error', None)
@@ -70,39 +61,31 @@ def process_google_auth_response():
         return c.render_template('index.html',
                                  title="oAuth Error",
                                  message=error)
-    state = c.session.get('state')
-    flow = get_flow(state)
-    flow.fetch_token(authorization_response=request.url)
-    credentials = flow.credentials
-    c.session.set('google_credentials', {
-        'token': credentials.token,
-        'refresh_token': credentials.refresh_token,
-        'token_uri': credentials.token_uri,
-        'client_id': credentials.client_id,
-        'client_secret': credentials.client_secret,
-        'scopes': credentials.scopes}
-    )
-    c.session.delete('state')
+    complete_google_auth(c, request.url)
     return c.redirect('/')
 
 
-@app.route('/login')
+@app.route('/github_auth')
 def trigger_github_auth():
-    redirect_uri = url_for('authorize', _external=True)
-    return oauth.github.authorize_redirect(redirect_uri)
+    return get_github_auth_url()
 
 
-@app.route('/authorize')
-def authorize():
+@app.route('/github_oauth2callback')
+def process_github_auth_response():
     c = Cookie(request)
-    token = oauth.github.authorize_access_token()
-    c.session.set('github_token', token)
+    complete_github_auth(c)
     return c.redirect('/test')
 
 
-@app.route('/test')
+@app.route('/test_google')
+def sheets():
+    c = Cookie(request)
+    repos = get_all_sheets(c)
+    return c.render_template(title='choose a spreadsheet', message=repos)
+
+
+@app.route('/test_github')
 def repos():
     c = Cookie(request)
-    resp = oauth.github.get('/user/repos', token=c.session.get('github_token'))
-    repos = resp.json()
+    repos = get_all_repos(c)
     return c.render_template(title='choose a repo', message=repos)
