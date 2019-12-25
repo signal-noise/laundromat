@@ -1,12 +1,24 @@
 # from https://developers.google.com/identity/protocols/OAuth2WebServer
+import logging
+import pickle
 import google_auth_oauthlib.flow
+from googleapiclient.discovery import build
 from flask import url_for
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 
 def get_flow(state=None):
     """Configures the google-specific SDK that does the hard work"""
     args = ['/config/client_secret.json',
-            ['https://www.googleapis.com/auth/spreadsheets']]
+            ['https://www.googleapis.com/auth/drive.metadata.readonly',
+             'https://www.googleapis.com/auth/drive',
+             'https://www.googleapis.com/auth/drive.file',
+             'https://www.googleapis.com/auth/drive.install',
+             'https://www.googleapis.com/auth/spreadsheets',
+             ]
+            ]
     kwargs = {}
     if state is not None:
         kwargs['state'] = state
@@ -38,11 +50,27 @@ def complete_auth(cookie, url):
         'token_uri': credentials.token_uri,
         'client_id': credentials.client_id,
         'client_secret': credentials.client_secret,
-        'scopes': credentials.scopes}
+        'scopes': credentials.scopes,
+        'pickled': pickle.dumps(credentials)
+    }
     )
     cookie.session.delete('state')
     return
 
 
 def get_all_sheets(cookie):
-    return []
+    creds_dict = cookie.session.get('google_credentials')
+    creds = pickle.loads(creds_dict['pickled'])
+    print(creds)
+    service = build('drive', 'v3', credentials=creds)
+    results = service.files().list(
+        q="mimeType='application/vnd.google-apps.spreadsheet'",
+        orderBy="modifiedTime desc",
+        fields="files(id, name)",
+        pageSize=10,
+        corpora="allDrives",
+        includeItemsFromAllDrives=True,
+        supportsAllDrives=True,
+    ).execute()
+    items = results.get('files', [])
+    return items

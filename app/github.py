@@ -26,11 +26,11 @@ def get_auth_url():
 
 def complete_auth(cookie):
     token = oauth.github.authorize_access_token()
-    cookie.session.set('github_token', token)
+    cookie.session.set('github_credentials', token)
     return
 
 
 def get_all_repos(cookie):
     resp = oauth.github.get(
-        '/user/repos', token=cookie.session.get('github_token'))
+        '/user/repos?sort="pushed"', token=cookie.session.get('github_credentials'))
     return resp.json()

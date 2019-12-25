@@ -17,25 +17,35 @@ app.secret_key = 'super secret key'
 
 @app.route('/')
 def index():
+    context = {}
     c = Cookie(request)
-    google_creds = c.session.get('google_credentials')
-    if google_creds is not None and google_creds != {}:
-        spreadsheet_id = c.session.get('spreadsheet_id')
-        if spreadsheet_id is None:
-            spreadsheet_id = request.args.get('s')
-        if spreadsheet_id is not None:
-            c.session.set('spreadsheet_id', spreadsheet_id)
-            github_token = c.session.get('github_token')
-            if github_token is not None:
-                return c.redirect('/test_github')
-            else:
-                return c.redirect(url_for('trigger_github_auth'))
-        else:
-            (title, message) = ('great', 'choose a sheet (?s=xxx)')
-    else:
-        return c.redirect(url_for('trigger_google_auth'))
+    context['message'] = c.session.get('message', '')
+    c.session.delete('message')
 
-    return c.render_template('index.html', title=title, message=message)
+    google_creds = c.session.get('google_credentials')
+    github_creds = c.session.get('github_credentials')
+
+    context['spreadsheet_id'] = request.args.get('s')
+    if context['spreadsheet_id'] is not None:
+        c.session.set('spreadsheet_id', context['spreadsheet_id'])
+    else:
+        context['spreadsheet_id'] = c.session.get('spreadsheet_id')
+
+    if google_creds is not None and google_creds != {}:
+        if github_creds is not None:
+            return c.redirect('/test_github')
+        else:
+            # return c.redirect(url_for('trigger_github_auth'))
+            context['instruction'] = "You need to sign in with your Github Account before you can go any further"
+            context['action'] = url_for('trigger_github_auth')
+            context['cta'] = "Login with Github"
+    else:
+        context['instruction'] = "You need to sign in with your Google Account before you can go any further"
+        context['action'] = url_for('trigger_google_auth')
+        context['cta'] = "Login with Google"
+        # return c.redirect(url_for('trigger_google_auth'))
+
+    return c.render_template(context=context)
 
 
 @app.route('/logout')
@@ -74,18 +84,28 @@ def trigger_github_auth():
 def process_github_auth_response():
     c = Cookie(request)
     complete_github_auth(c)
-    return c.redirect('/test')
+    return c.redirect('/')
 
 
 @app.route('/test_google')
 def sheets():
+    context = {}
     c = Cookie(request)
-    repos = get_all_sheets(c)
-    return c.render_template(title='choose a spreadsheet', message=repos)
+    context['message'] = c.session.get('message', '')
+    c.session.delete('message')
+
+    sheets = get_all_sheets(c)
+    context['message'] = sheets
+    return c.render_template(context=context)
 
 
 @app.route('/test_github')
 def repos():
+    context = {}
     c = Cookie(request)
+    context['message'] = c.session.get('message', '')
+    c.session.delete('message')
+
     repos = get_all_repos(c)
-    return c.render_template(title='choose a repo', message=repos)
+    context['message'] = repos
+    return c.render_template(context=context)

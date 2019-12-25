@@ -1,0 +1,35 @@
+<html>
+  <head>
+    <title>{% if title %}{{ title }} - {% endif %}Laundromat</title>
+    <link
+      href="{{ url_for('static', filename='minireset.css') }}"
+      rel="stylesheet"
+    />
+    <link
+      href="{{ url_for('static', filename='site.css') }}"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <nav>
+      <h1><a href="/">Laundromat &#x1F9FA;</a></h1>
+      <ul>
+        {% if context.google_username %}
+        <li>
+          <a href="https://docs.google.com/spreadsheets/u/0/"
+            >Your Google Sheets</a
+          >
+        </li>
+        <li>
+          <a href="https://docs.google.com/spreadsheets/u/0/"
+            >Your Repositories</a
+          >
+        </li>
+        {% else %}
+        <li><a href="/">Login</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% block content %} {% endblock %}
+  </body>
+</html>
