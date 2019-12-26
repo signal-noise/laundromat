@@ -67,7 +67,7 @@ def get_all_sheets(cookie):
         q="mimeType='application/vnd.google-apps.spreadsheet'",
         orderBy="modifiedTime desc",
         fields="files(id, name)",
-        pageSize=10,
+        pageSize=20,
         corpora="allDrives",
         includeItemsFromAllDrives=True,
         supportsAllDrives=True,

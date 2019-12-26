@@ -17,20 +17,27 @@ from app.cookie import Cookie
 def index():
     context = {}
     c = Cookie(request)
-    context['message'] = c.session.pop('message', '')
-    context['message_context'] = c.session.pop('message_context', '')
+    context['message'] = c.session.pop('message')
+    context['message_context'] = c.session.pop('message_context', 'info')
     context['google_creds'] = c.session.get('google_credentials')
     context['github_creds'] = c.session.get('github_credentials')
 
     context['spreadsheet_id'] = request.args.get('s')
     if context['spreadsheet_id'] is not None:
         c.session.set('spreadsheet_id', context['spreadsheet_id'])
+        print(context['message'])
+        if context['message'] is None:
+            context['message'] = 'Spreadsheet selection confirmed'
+            context['message_context'] = 'success'
     else:
         context['spreadsheet_id'] = c.session.get('spreadsheet_id')
 
     context['repo_name'] = request.args.get('r')
     if context['repo_name'] is not None:
         c.session.set('repo_name', context['repo_name'])
+        if context['message'] is None:
+            context['message'] = 'Repository selection confirmed'
+            context['message_context'] = 'success'
     else:
         context['repo_name'] = c.session.get('repo_name')
 
@@ -130,8 +137,8 @@ def logout():
 def sheets():
     context = {}
     c = Cookie(request)
-    context['message'] = c.session.pop('message', '')
-    context['message_context'] = c.session.pop('message_context', '')
+    context['message'] = c.session.pop('message')
+    context['message_context'] = c.session.pop('message_context', 'info')
     context['google_creds'] = c.session.get('google_credentials')
     context['github_creds'] = c.session.get('github_credentials')
 
@@ -143,15 +150,16 @@ def sheets():
         "Only the sheets you've edited most recently appear here; "
         "if you don't see the one you expect please edit it and "
         "refresh this page.")
-    return c.render_template(context=context)
+    context['choice_var'] = 's'
+    return c.render_template('chooser.html', context=context)
 
 
 @app.route('/choose_repo')
 def repos():
     context = {}
     c = Cookie(request)
-    context['message'] = c.session.pop('message', '')
-    context['message_context'] = c.session.pop('message_context', '')
+    context['message'] = c.session.pop('message')
+    context['message_context'] = c.session.pop('message_context', 'info')
     context['google_creds'] = c.session.get('google_credentials')
     context['github_creds'] = c.session.get('github_credentials')
 
@@ -160,15 +168,16 @@ def repos():
     context['title'] = "Select a repository"
     context['instruction'] = "Choose which repository to connect to this sheet"
     context['description'] = "Your most recently updated repos are shown here"
-    return c.render_template(context=context)
+    context['choice_var'] = 'r'
+    return c.render_template('chooser.html', context=context)
 
 
 @app.route('/setup_sheet')
 def setup_sheet():
     context = {}
     c = Cookie(request)
-    context['message'] = c.session.pop('message', '')
-    context['message_context'] = c.session.pop('message_context', '')
+    context['message'] = c.session.pop('message')
+    context['message_context'] = c.session.pop('message_context', 'info')
     context['google_creds'] = c.session.get('google_credentials')
     context['github_creds'] = c.session.get('github_credentials')
 
@@ -185,8 +194,8 @@ def setup_sheet():
 def sync():
     context = {}
     c = Cookie(request)
-    context['message'] = c.session.pop('message', '')
-    context['message_context'] = c.session.pop('message_context', '')
+    context['message'] = c.session.pop('message')
+    context['message_context'] = c.session.pop('message_context', 'info')
     context['google_creds'] = c.session.get('google_credentials')
     context['github_creds'] = c.session.get('github_credentials')
 
