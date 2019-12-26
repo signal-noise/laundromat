@@ -13,22 +13,20 @@
   <body>
     <nav>
       <h1><a href="/">Laundromat &#x1F9FA;</a></h1>
+      {% if context.google_creds %}
       <ul>
-        {% if context.google_username %}
         <li>
-          <a href="https://docs.google.com/spreadsheets/u/0/"
+          <a href="https://docs.google.com/spreadsheets/u/0/" target="_new"
             >Your Google Sheets</a
           >
         </li>
+        {% if context.github_creds %}
         <li>
-          <a href="https://docs.google.com/spreadsheets/u/0/"
-            >Your Repositories</a
-          >
+          <a href="https://github.com" target="_new">Your Github homepage</a>
         </li>
-        {% else %}
-        <li><a href="/">Login</a></li>
         {% endif %}
       </ul>
+      {% endif %}
     </nav>
     {% block content %} {% endblock %}
   </body>

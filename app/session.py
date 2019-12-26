@@ -26,6 +26,11 @@ class Session:
         else:
             return doc_dict
 
+    def pop(self, key, default=None):
+        value = self.get(key, default)
+        self.delete(key)
+        return value
+
     def set(self, key, value):
         doc_dict = self.get()
         doc_dict[key] = value

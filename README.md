@@ -6,13 +6,15 @@
 Once set up, users will need to take the following set of steps
 
 1. Allow the Laundromat G Suite App access to your account
-2. Ensure the sheet document has the right settings set up
-3. Allow the Laundromat Github App access to your account
-4. Run the script:
+2. Allow the Laundromat Github App access to your account
+3. Select a sheet
+4. Select a repo
+5. Ensure the sheet document has the right settings set up
+6. Run the script:
     * Export CSV
     * Commit to GitHub
     * Open PR
-5. Confirm
+7. Confirm
 
 # Initial setup
 
