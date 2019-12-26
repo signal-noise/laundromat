@@ -12,8 +12,6 @@ from app.github import (
 )
 from app.cookie import Cookie
 
-app.secret_key = 'super secret key'
-
 
 @app.route('/')
 def index():
