@@ -18,7 +18,7 @@ def index():
     context = {}
     c = Cookie(request)
     context['message'] = c.session.pop('message', '')
-
+    context['message_context'] = c.session.pop('message_context', '')
     context['google_creds'] = c.session.get('google_credentials')
     context['github_creds'] = c.session.get('github_credentials')
 
@@ -95,9 +95,11 @@ def process_google_auth_response():
     error = request.args.get('error', None)
     if error is not None:
         c.session.set('message', f'Error logging in to Google: {error}')
+        c.session.set('message_context', 'warning')
     else:
         complete_google_auth(c, request.url)
         c.session.set('message', "Google login succeeded")
+        c.session.set('message_context', 'success')
     return c.redirect('/')
 
 
@@ -111,6 +113,7 @@ def process_github_auth_response():
     c = Cookie(request)
     complete_github_auth(c)
     c.session.set('message', "Github login succeeded")
+    c.session.set('message_context', 'success')
     return c.redirect('/')
 
 
@@ -119,6 +122,7 @@ def logout():
     c = Cookie(request)
     c.reset()
     c.session.set('message', "You've been logged out of Google and Github")
+    c.session.set('message_context', 'success')
     return c.redirect('/')
 
 
@@ -127,6 +131,9 @@ def sheets():
     context = {}
     c = Cookie(request)
     context['message'] = c.session.pop('message', '')
+    context['message_context'] = c.session.pop('message_context', '')
+    context['google_creds'] = c.session.get('google_credentials')
+    context['github_creds'] = c.session.get('github_credentials')
 
     sheets = get_all_sheets(c)
     context['data'] = sheets
@@ -144,6 +151,9 @@ def repos():
     context = {}
     c = Cookie(request)
     context['message'] = c.session.pop('message', '')
+    context['message_context'] = c.session.pop('message_context', '')
+    context['google_creds'] = c.session.get('google_credentials')
+    context['github_creds'] = c.session.get('github_credentials')
 
     repos = get_all_repos(c)
     context['data'] = repos
@@ -158,6 +168,9 @@ def setup_sheet():
     context = {}
     c = Cookie(request)
     context['message'] = c.session.pop('message', '')
+    context['message_context'] = c.session.pop('message_context', '')
+    context['google_creds'] = c.session.get('google_credentials')
+    context['github_creds'] = c.session.get('github_credentials')
 
     context['data'] = 'sheet config here'
     context['title'] = "Setup the sheet"
@@ -173,6 +186,9 @@ def sync():
     context = {}
     c = Cookie(request)
     context['message'] = c.session.pop('message', '')
+    context['message_context'] = c.session.pop('message_context', '')
+    context['google_creds'] = c.session.get('google_credentials')
+    context['github_creds'] = c.session.get('github_credentials')
 
     context['title'] = "Sync"
     context['instruction'] = "probably set a message and redirect i guess"
