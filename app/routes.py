@@ -38,27 +38,36 @@ def index():
 
     if context['google_creds'] is None or context['google_creds'] == {}:
         context['title'] = "Google authentication needed"
-        context['instruction'] = "You need to sign in with your Google Account before you can go any further"
+        context['instruction'] = (
+            "You need to sign in with your Google Account"
+            " before you can go any further")
         context['action'] = url_for('trigger_google_auth')
         context['cta'] = "Login with Google"
     elif context['github_creds'] is None or context['github_creds'] == {}:
         context['title'] = "Github authentication needed"
-        context['instruction'] = "You need to sign in with your Github Account before you can go any further"
+        context['instruction'] = (
+            "You need to sign in with your Github Account"
+            " before you can go any further")
         context['action'] = url_for('trigger_github_auth')
         context['cta'] = "Login with Github"
     elif context['spreadsheet_id'] is None:
         context['title'] = "No spreadsheet selected"
-        context['instruction'] = "You need to select a spreadsheet before you can go any further"
+        context['instruction'] = (
+            "You need to select a spreadsheet"
+            " before you can go any further")
         context['action'] = url_for('sheets')
         context['cta'] = "Select Sheet"
     elif context['repo_name'] is None:
         context['title'] = "No repository selected"
-        context['instruction'] = "You need to select a repo before you can go any further"
+        context['instruction'] = (
+            "You need to select a repo before you can go any further")
         context['action'] = url_for('repos')
         context['cta'] = "Select Repo"
     elif context['sheet_is_setup'] is False:
         context['title'] = "Spreadsheet is not configured"
-        context['instruction'] = "You need to setup your sheet. We can do this automatically right now"
+        context['instruction'] = (
+            "You need to setup your sheet. We can do this"
+            " automatically right now")
         context['action'] = url_for('setup_sheet')
         context['cta'] = "Setup sheet"
     else:
@@ -123,7 +132,10 @@ def sheets():
     context['data'] = sheets
     context['title'] = "Select a sheet"
     context['instruction'] = "Choose which sheet to send over"
-    context['description'] = "Only the sheets you've edited most recently appear here; if you don't see the one you expect please edit it and refresh this page."
+    context['description'] = (
+        "Only the sheets you've edited most recently appear here; "
+        "if you don't see the one you expect please edit it and "
+        "refresh this page.")
     return c.render_template(context=context)
 
 
@@ -150,7 +162,9 @@ def setup_sheet():
     context['data'] = 'sheet config here'
     context['title'] = "Setup the sheet"
     context['instruction'] = "Configure the details of the sync"
-    context['description'] = "These details will be saved in a new worksheet, which you can edit directly in future"
+    context['description'] = (
+        "These details will be saved in a "
+        "new worksheet, which you can edit directly in future")
     return c.render_template(context=context)
 
 
