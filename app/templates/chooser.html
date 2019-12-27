@@ -6,12 +6,12 @@
 <div class="row">
   <div style="text-align: center;">
     <div class="btn-group-vertical" role="group">
-      {% for sheet in data %}
+      {% for item in data %} {% set name = item[name_field] or item.name %}
       <a
-        href="/?{{ choice_var }}={{ sheet.id }}"
+        href="/?{{ choice_var }}={{ item.id }}&n={{ name }}"
         class="btn btn-default"
         style="text-align: left;"
-        >{{ sheet.name }}</a
+        >{{ name }}</a
       >
       {% endfor %}
     </div>

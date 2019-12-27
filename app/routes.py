@@ -23,20 +23,23 @@ def index():
     context['github_creds'] = c.session.get('github_credentials')
 
     context['spreadsheet_id'] = request.args.get('s')
+    context['spreadsheet_name'] = request.args.get('n')
     if context['spreadsheet_id'] is not None:
         c.session.set('spreadsheet_id', context['spreadsheet_id'])
-        print(context['message'])
+        c.session.set('spreadsheet_name', context['spreadsheet_name'])
         if context['message'] is None:
-            context['message'] = 'Spreadsheet selection confirmed'
+            context['message'] = f'Spreadsheet selected: {context["spreadsheet_name"]}'
             context['message_context'] = 'success'
     else:
         context['spreadsheet_id'] = c.session.get('spreadsheet_id')
 
-    context['repo_name'] = request.args.get('r')
-    if context['repo_name'] is not None:
+    context['repo_id'] = request.args.get('r')
+    context['repo_name'] = request.args.get('n')
+    if context['repo_id'] is not None:
+        c.session.set('repo_id', context['repo_id'])
         c.session.set('repo_name', context['repo_name'])
         if context['message'] is None:
-            context['message'] = 'Repository selection confirmed'
+            context['message'] = f'Repository selected: {context["repo_name"]}'
             context['message_context'] = 'success'
     else:
         context['repo_name'] = c.session.get('repo_name')
@@ -73,7 +76,7 @@ def index():
     elif context['sheet_is_setup'] is False:
         context['title'] = "Spreadsheet is not configured"
         context['instruction'] = (
-            "You need to setup your sheet. We can do this"
+            "You need to setup your sheet for sync. Let's do that"
             " automatically right now")
         context['action'] = url_for('setup_sheet')
         context['cta'] = "Setup sheet"
@@ -169,10 +172,11 @@ def repos():
     context['instruction'] = "Choose which repository to connect to this sheet"
     context['description'] = "Your most recently updated repos are shown here"
     context['choice_var'] = 'r'
+    context['name_field'] = 'full_name'
     return c.render_template('chooser.html', context=context)
 
 
-@app.route('/setup_sheet')
+@app.route('/setup_sheet', methods=['GET', 'POST'])
 def setup_sheet():
     context = {}
     c = Cookie(request)
@@ -180,14 +184,33 @@ def setup_sheet():
     context['message_context'] = c.session.pop('message_context', 'info')
     context['google_creds'] = c.session.get('google_credentials')
     context['github_creds'] = c.session.get('github_credentials')
+    context['spreadsheet_name'] = c.session.get('spreadsheet_name')
 
-    context['data'] = 'sheet config here'
     context['title'] = "Setup the sheet"
     context['instruction'] = "Configure the details of the sync"
     context['description'] = (
-        "These details will be saved in a "
-        "new worksheet, which you can edit directly in future")
-    return c.render_template(context=context)
+        "These details will be saved in a new worksheet called 'Laundromat',"
+        " which will be created on your selected spreadsheet. In future you"
+        "  can edit this sheet directly, being careful since typos can break"
+        " the script")
+
+    if request.method == 'POST':
+        if c.session.get('repo_name') != request.form.get("repo_name"):
+            c.session.set('repo_name', request.form.get('repo_name'))
+            c.session.delete('repo_id')
+        c.session.set('repo_branch', request.form.get("repo_branch"))
+        c.session.set('pr_target', request.form.get("pr_target"))
+        c.session.set('skip_pr', request.form.get("skip_pr"))
+
+        # all the session stuff above to be replaced with actual spreadsheet write
+
+    context['repository_name'] = request.form.get(
+        "repo_name") or c.session.get('repo_name')
+    context['repo_branch'] = c.session.get("repo_branch") or '__auto__'
+    context['pr_target'] = c.session.get("pr_target") or 'master'
+    context['skip_pr'] = c.session.get("skip_pr") or False
+
+    return c.render_template('setup.html', context=context)
 
 
 @app.route('/sync')
