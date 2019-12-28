@@ -1,0 +1,43 @@
+{% extends 'bootstrap/base.html' %} 
+
+{% block title %} 
+    {% if title %}{{ title }} - {% endif %}Laundromat 
+{% endblock %}
+
+{% block navbar %}
+    <nav class="navbar navbar-inverse" style="border-radius: 0;">
+      <a href="/" class="navbar-brand">Laundromat</a>
+      {% if context.google_creds %}
+        <div class="navbar-nav navbar-right" style="margin-right:15px;">
+          <a class="nav-item nav-link" href="https://docs.google.com/spreadsheets/u/0/" target="_new"
+            >Your Sheets</a
+          >
+        {% if context.github_creds %}
+          <a class="nav-item nav-link" href="https://github.com" target="_new">Github</a>
+        {% endif %}
+          <a class="nav-item nav-link" href="{{ url_for('logout') }}">
+            <button type="button" class="btn btn-default btn-xs navbar-btn">Logout</button>
+        </a>
+        </div>
+      {% endif %}
+    </nav>
+{% endblock %}
+
+{% block content %}
+    <div class="container" style="max-width:768px;">
+        {% if message %}
+            {% set class = 'alert alert-' ~ message_context or 'info' %}
+            <div class="{{ class }}" role="alert">{{ message }}</div>
+        {% endif %}
+
+        {% block app_content %}{% endblock %}
+
+    {% if action %}
+        <div class="row">
+            <div class="col-md-3 col-md-offset-9" style="text-align: right;">
+                <a href="{{ action }}"><button class="btn btn-primary">{{ cta }}</button></a>
+            </div>
+        </div>
+    {% endif %} 
+    </div>
+{% endblock %}

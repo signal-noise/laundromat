@@ -1,0 +1,20 @@
+{% extends "base.html" %} {% block app_content %}
+<h1>{{ title }}</h1>
+<p>{{ instruction }}</p>
+<p>{{ description }}</p>
+
+<div class="row">
+  <div style="text-align: center;">
+    <div class="btn-group-vertical" role="group">
+      {% for item in data %} {% set name = item[name_field] or item.name %}
+      <a
+        href="/?{{ choice_var }}={{ item.id }}&n={{ name }}"
+        class="btn btn-default"
+        style="text-align: left;"
+        >{{ name }}</a
+      >
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

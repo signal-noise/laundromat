@@ -29,9 +29,13 @@ class Cookie:
     def generate_uuid(self):
         return str(uuid.uuid4())
 
-    def render_template(self, template='index.html', title=None, message=None):
-        resp = make_response(flask_render_template(
-            template, title=title, message=message))
+    def render_template(self, *args, **kwargs):
+        if args is None or len(args) == 0:
+            args = ('index.html', )
+        if 'context' in kwargs:
+            for k, v in kwargs['context'].items():
+                kwargs[k] = v
+        resp = make_response(flask_render_template(*args, **kwargs))
         resp.set_cookie('sessionid', self.uid)
         return resp
 

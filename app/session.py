@@ -12,7 +12,7 @@ class Session:
         self.doc_ref = self.db.collection(u'session').document(uid)
         self.expiry = expiry
 
-    def get(self, key=None):
+    def get(self, key=None, default=None):
         doc_dict = self.doc_ref.get().to_dict()
         if doc_dict is None:
             return {}
@@ -22,9 +22,14 @@ class Session:
             self.remove()
             return {}
         if key is not None:
-            return doc_dict.get(key, None)
+            return doc_dict.get(key, default)
         else:
             return doc_dict
+
+    def pop(self, key, default=None):
+        value = self.get(key, default)
+        self.delete(key)
+        return value
 
     def set(self, key, value):
         doc_dict = self.get()

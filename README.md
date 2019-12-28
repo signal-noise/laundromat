@@ -6,13 +6,15 @@
 Once set up, users will need to take the following set of steps
 
 1. Allow the Laundromat G Suite App access to your account
-2. Ensure the sheet document has the right settings set up
-3. Allow the Laundromat Github App access to your account
-4. Run the script:
+2. Allow the Laundromat Github App access to your account
+3. Select a sheet
+4. Select a repo
+5. Ensure the sheet document has the right settings set up
+6. Run the script:
     * Export CSV
     * Commit to GitHub
     * Open PR
-5. Confirm
+7. Confirm
 
 # Initial setup
 
@@ -32,7 +34,7 @@ G Suite / Github permissions?
 
 Set up a GCP Project. Set up a [Firestore](https://console.cloud.google.com/firestore/data) (native) database. You'll need a service account and JSON file along with it. The service account needs thr `Firebase Rules System` permission.
 
-Use the [Library](https://console.developers.google.com/apis/library) page to select the Sheets API and enable it. 
+Use the [Library](https://console.developers.google.com/apis/library) page to select the Sheets API and Drive API and enable both. 
 
 On the [Credentials](https://console.developers.google.com/apis/credentials) page click **Create Credentials > OAuth client ID**. Choose a Web Application type and give it a name. You'll need to set `http://localhost:8080` as an authorized URI during development, and update this once you deploy to a live environment.
 
