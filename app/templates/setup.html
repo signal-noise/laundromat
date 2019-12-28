@@ -12,7 +12,11 @@
   <div class="form-group">
     <label for="spreadsheet_sheet" class="col-sm-3 control-label">Sheet</label>
     <div class="col-sm-9">
-      <select class="form-control" id="spreadsheet_sheet" name="spreadsheet_sheet"<option>{{ context.spreadsheet_sheet }}</option></select>
+      <select class="form-control" id="spreadsheet_sheet" name="spreadsheet_sheet">
+      {% for sheet in all_sheets %}
+        <option{% if sheet == spreadsheet_sheet %} selected="selected"{% endif %}>{{ sheet }}</option>
+      {% endfor %}
+    </select>
     </div>
   </div>
   <div class="form-group">

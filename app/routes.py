@@ -2,8 +2,11 @@ from flask import request, url_for
 from app import app
 from app.google import (
     complete_auth as complete_google_auth,
-    get_all_sheets,
+    get_all_spreadsheets,
     get_auth_url as get_google_auth_url,
+    get_sheets,
+    configure_spreadsheet,
+    is_configured,
 )
 from app.github import (
     complete_auth as complete_github_auth,
@@ -44,7 +47,8 @@ def index():
     else:
         context['repo_name'] = c.session.get('repo_name')
 
-    context['sheet_is_setup'] = False  # get a way to do this
+    context['sheet_is_setup'] = is_configured(
+        c, context['spreadsheet_id']) is not False
 
     if context['google_creds'] is None or context['google_creds'] == {}:
         context['title'] = "Google authentication needed"
@@ -145,7 +149,7 @@ def sheets():
     context['google_creds'] = c.session.get('google_credentials')
     context['github_creds'] = c.session.get('github_credentials')
 
-    sheets = get_all_sheets(c)
+    sheets = get_all_spreadsheets(c)
     context['data'] = sheets
     context['title'] = "Select a sheet"
     context['instruction'] = "Choose which sheet to send over"
@@ -194,15 +198,25 @@ def setup_sheet():
         "  can edit this sheet directly, being careful since typos can break"
         " the script")
 
+    context['all_sheets'] = get_sheets(c, c.session.get('spreadsheet_id'))
+
     if request.method == 'POST':
         if c.session.get('repo_name') != request.form.get("repo_name"):
             c.session.set('repo_name', request.form.get('repo_name'))
             c.session.delete('repo_id')
-        c.session.set('repo_branch', request.form.get("repo_branch"))
-        c.session.set('pr_target', request.form.get("pr_target"))
-        c.session.set('skip_pr', request.form.get("skip_pr"))
 
-        # all the session stuff above to be replaced with actual spreadsheet write
+        config = request.form.to_dict()
+        config['skip_pr'] = request.form.get('skip_pr')
+        response = configure_spreadsheet(
+            c, c.session.get('spreadsheet_id'), config)
+        if len(response['replies']) > 0:
+            c.session.set('message', 'Spreadsheet configured successfully')
+            c.session.set('message_context', 'success')
+            return c.redirect('/')
+        else:
+            c.session.set(
+                'message', 'Something went wrong configuring the spreadsheet')
+            c.session.set('message_context', 'error')
 
     context['spreadsheet_sheet'] = request.form.get(
         "spreadsheet_sheet") or c.session.get('spreadsheet_sheet')
