@@ -2,10 +2,11 @@ from flask import request, url_for
 from app import app
 from app.google import (
     complete_auth as complete_google_auth,
+    configure_spreadsheet,
     get_all_spreadsheets,
     get_auth_url as get_google_auth_url,
+    get_data,
     get_sheets,
-    configure_spreadsheet,
     is_configured,
 )
 from app.github import (
@@ -249,4 +250,6 @@ def sync():
     context['title'] = "Sync"
     context['instruction'] = "probably set a message and redirect i guess"
     context['description'] = ""
+
+    context['data'] = get_data(c, c.session.get('spreadsheet_id'))
     return c.render_template(context=context)
