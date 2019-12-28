@@ -79,7 +79,8 @@ def get_sheets_raw(cookie, spreadsheet_id):
     creds_dict = cookie.session.get('google_credentials')
     creds = pickle.loads(creds_dict['pickled'])
     service = build('sheets', 'v4', credentials=creds)
-    results = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
+    results = service.spreadsheets().get(
+        spreadsheetId=spreadsheet_id).execute()
     return results.get('sheets', [])
 
 
@@ -112,7 +113,9 @@ def get_or_create_config_sheet_id(cookie, spreadsheet_id):
             }
         }]
         results = service.spreadsheets().batchUpdate(
-            spreadsheetId=spreadsheet_id, body={'requests': requests}).execute()
+            spreadsheetId=spreadsheet_id,
+            body={'requests': requests}
+        ).execute()
         sheet_id = results['replies'][0]['addSheet']['properties']['sheetId']
         print(f'::: sheet ID is {sheet_id}')
     return sheet_id
@@ -197,7 +200,9 @@ def configure_spreadsheet(cookie, spreadsheet_id, config):
                         },
                         {
                             "userEnteredValue": {
-                                "boolValue": True if config['skip_pr'] == 'on' else False
+                                "boolValue": (True
+                                              if config['skip_pr'] == 'on'
+                                              else False)
                             }
                         },
                         {

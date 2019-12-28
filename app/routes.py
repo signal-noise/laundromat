@@ -31,7 +31,8 @@ def index():
         c.session.set('spreadsheet_id', context['spreadsheet_id'])
         c.session.set('spreadsheet_name', context['spreadsheet_name'])
         if context['message'] is None:
-            context['message'] = f'Spreadsheet selected: {context["spreadsheet_name"]}'
+            context['message'] = (
+                f'Spreadsheet selected: {context["spreadsheet_name"]}')
             context['message_context'] = 'success'
     else:
         context['spreadsheet_id'] = c.session.get('spreadsheet_id')
