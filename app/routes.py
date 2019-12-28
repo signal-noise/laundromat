@@ -47,8 +47,10 @@ def index():
     else:
         context['repo_name'] = c.session.get('repo_name')
 
-    context['sheet_is_setup'] = is_configured(
-        c, context['spreadsheet_id']) is not False
+    context['sheet_is_setup'] = (
+        context['google_creds'] is not None and
+        context['spreadsheet_id'] is not None and
+        is_configured(c, context['spreadsheet_id']) is not False)
 
     if context['google_creds'] is None or context['google_creds'] == {}:
         context['title'] = "Google authentication needed"
@@ -65,33 +67,36 @@ def index():
         context['action'] = url_for('trigger_github_auth')
         context['cta'] = "Login with Github"
     elif context['spreadsheet_id'] is None:
-        context['title'] = "No spreadsheet selected"
-        context['instruction'] = (
-            "You need to select a spreadsheet"
-            " before you can go any further")
-        context['action'] = url_for('sheets')
-        context['cta'] = "Select Sheet"
+        # context['title'] = "No spreadsheet selected"
+        # context['instruction'] = (
+        #     "You need to select a spreadsheet"
+        #     " before you can go any further")
+        # context['action'] = url_for('sheets')
+        # context['cta'] = "Select Sheet"
+        return c.redirect(url_for('sheets'))
     elif context['repo_name'] is None:
-        context['title'] = "No repository selected"
-        context['instruction'] = (
-            "You need to select a repo before you can go any further")
-        context['action'] = url_for('repos')
-        context['cta'] = "Select Repo"
+        # context['title'] = "No repository selected"
+        # context['instruction'] = (
+        #     "You need to select a repo before you can go any further")
+        # context['action'] = url_for('repos')
+        # context['cta'] = "Select Repo"
+        return c.redirect(url_for('repos'))
     elif context['sheet_is_setup'] is False:
-        context['title'] = "Spreadsheet is not configured"
-        context['instruction'] = (
-            "You need to setup your sheet for sync. Let's do that"
-            " automatically right now")
-        context['action'] = url_for('setup_sheet')
-        context['cta'] = "Setup sheet"
+        # context['title'] = "Spreadsheet is not configured"
+        # context['instruction'] = (
+        #     "You need to setup your sheet for sync. Let's do that"
+        #     " automatically right now")
+        # context['action'] = url_for('setup_sheet')
+        # context['cta'] = "Setup sheet"
+        return c.redirect(url_for('setup_sheet'))
     else:
+        if request.args.get('auto') == 'true':
+            return c.redirect(url_for('sync'))
+
         context['title'] = "All checks completed"
         context['instruction'] = "Let's send your sheet over!"
         context['action'] = url_for('sync')
         context['cta'] = "Send"
-
-        if request.args.get('auto') == 'true':
-            return c.redirect(url_for('sync'))
 
     return c.render_template(context=context)
 
