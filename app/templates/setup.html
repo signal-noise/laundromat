@@ -3,35 +3,41 @@
 <p>{{ instruction }}</p>
 <form class="form-horizontal" method="POST">
   <div class="form-group">
-    <label for="spreadsheet_name" class="col-sm-2 control-label">Spreadsheet</label>
-    <div class="col-sm-10">
-      <input type="text" class="form-control" id="spreadsheet_name" name="spreadsheet_name" placeholder="user/repo" value="{{ context.spreadsheet_name }}" disabled="disabled" style="width:calc(100% - 50px);display:inline">
+    <label for="spreadsheet_name" class="col-sm-3 control-label">Spreadsheet</label>
+    <div class="col-sm-9">
+      <input type="text" class="form-control" id="spreadsheet_name" name="spreadsheet_name" value="{{ context.spreadsheet_name }}" disabled="disabled" style="width:calc(100% - 50px);display:inline">
         <a href="{{ url_for('sheets') }}" class="btn btn-default btn-xs">Select</a>
     </div>
   </div>
   <div class="form-group">
-    <label for="repo_name" class="col-sm-2 control-label">Repository</label>
-    <div class="col-sm-10">
-      <input type="text" class="form-control" id="repo_name" name="repo_name" placeholder="user/repo" value="{{ context.repository_name }}" style="width:calc(100% - 50px);display:inline">
+    <label for="spreadsheet_sheet" class="col-sm-3 control-label">Sheet</label>
+    <div class="col-sm-9">
+      <select class="form-control" id="spreadsheet_sheet" name="spreadsheet_sheet"<option>{{ context.spreadsheet_sheet }}</option></select>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="repo_name" class="col-sm-3 control-label">Repository</label>
+    <div class="col-sm-9">
+      <input type="text" class="form-control" id="repo_name" name="repo_name" value="{{ context.repository_name }}" style="width:calc(100% - 50px);display:inline">
         <a href="{{ url_for('repos') }}" class="btn btn-default btn-xs">Select</a>
     </div>
   </div>
   <div class="form-group">
-    <label for="repo_branch" class="col-sm-2 control-label">Branch</label>
-    <div class="col-sm-10">
+    <label for="repo_branch" class="col-sm-3 control-label">Branch</label>
+    <div class="col-sm-9">
       <input type="text" class="form-control" id="repo_branch" name="repo_branch" value="{{ repo_branch }}">
-      <span id="helpBlock" class="help-block">The branch of the repo that this data will be committed to. Leave as "__auto__" to ensure a new branch is always created, based on the PR target branch.</span>
+      <span class="help-block">The branch of the repo that this data will be committed to. Leave as "__auto__" to ensure a new branch is always created, based on the PR target branch.</span>
     </div>
   </div>
   <div class="form-group">
-    <label for="pr_target" class="col-sm-2 control-label">PR Target</label>
-    <div class="col-sm-10">
+    <label for="pr_target" class="col-sm-3 control-label">PR Target</label>
+    <div class="col-sm-9">
       <input type="text" class="form-control" id="pr_target" name="pr_target" value="{{ pr_target }}">
-      <span id="helpBlock" class="help-block">If a PR is opened, what is the target branch. If the new data is committed to an __auto__ branch, which branch is used to create the new branch from.</span>
+      <span class="help-block">If a PR is opened, what is the target branch. If the new data is committed to an __auto__ branch, which branch is used to create the new branch from.</span>
     </div>
   </div>
   <div class="form-group">
-    <div class="col-sm-offset-2 col-sm-10">
+    <div class="col-sm-offset-3 col-sm-9">
       <div class="checkbox">
         <label>
           <input type="checkbox" id="skip_pr" name="skip_pr" {% if skip_pr == 'on' %}checked="checked"{% endif %}> Skip creating PR
@@ -39,9 +45,23 @@
       </div>
     </div>
   </div>
+  <div class="form-group">
+    <label for="repo_path" class="col-sm-3 control-label">File Path</label>
+    <div class="col-sm-9">
+      <input type="text" class="form-control" id="repo_path" name="repo_path" value="{{ repo_path }}">
+      <span class="help-block">The location in the repository to write the file to, relative to the repo root.</span>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="file_name" class="col-sm-3 control-label">File Name</label>
+    <div class="col-sm-9">
+      <input type="text" class="form-control" id="file_name" name="file_name" value="{{ file_name }}">
+      <span class="help-block">Note this will always be a CSV format file so probably best to name it as such.</span>
+    </div>
+  </div>
 <p>{{ description }}</p>
   <div class="form-group">
-    <div class="col-sm-offset-2 col-sm-10">
+    <div class="col-sm-offset-2 col-sm-9">
       <button type="submit" class="btn btn-primary">Write to sheet</button>
     </div>
   </div>

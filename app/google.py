@@ -61,7 +61,6 @@ def complete_auth(cookie, url):
 def get_all_sheets(cookie):
     creds_dict = cookie.session.get('google_credentials')
     creds = pickle.loads(creds_dict['pickled'])
-    print(creds)
     service = build('drive', 'v3', credentials=creds)
     results = service.files().list(
         q="mimeType='application/vnd.google-apps.spreadsheet'",
@@ -74,3 +73,8 @@ def get_all_sheets(cookie):
     ).execute()
     items = results.get('files', [])
     return items
+
+
+def get_worksheets(cookie, spreadsheet_id):
+    creds_dict = cookie.session.get('google_credentials')
+    creds = pickle.loads(creds_dict['pickled'])

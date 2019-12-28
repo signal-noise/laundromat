@@ -204,11 +204,15 @@ def setup_sheet():
 
         # all the session stuff above to be replaced with actual spreadsheet write
 
+    context['spreadsheet_sheet'] = request.form.get(
+        "spreadsheet_sheet") or c.session.get('spreadsheet_sheet')
     context['repository_name'] = request.form.get(
         "repo_name") or c.session.get('repo_name')
     context['repo_branch'] = c.session.get("repo_branch") or '__auto__'
     context['pr_target'] = c.session.get("pr_target") or 'master'
     context['skip_pr'] = c.session.get("skip_pr") or False
+    context['repo_path'] = c.session.get("repo_path") or 'data'
+    context['file_name'] = c.session.get("file_name") or 'copy.csv'
 
     return c.render_template('setup.html', context=context)
 
