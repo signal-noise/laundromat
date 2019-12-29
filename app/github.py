@@ -1,6 +1,5 @@
 import base64
 import datetime
-import json
 import os
 
 from authlib.integrations.flask_client import OAuth
@@ -55,13 +54,15 @@ def get_all_repos(cookie):
 
 def check_if_file_exists(cookie):
     config = cookie.session.get('config')
-    url = f'/repos/{config["repo_name"]}/contents/{config["repo_path"]}{config["file_name"]}'
+    url = (f'/repos/{config["repo_name"]}/contents/'
+           f'{config["repo_path"]}{config["file_name"]}')
     resp = oauth.github.get(
         url,
         token=cookie.session.get('github_credentials')).json()
     if 'message' in resp and resp['message'] == 'Not Found':
         return False
-    elif 'type' in resp and (resp['type'] == 'file' or resp['type'] == 'symlink'):
+    elif 'type' in resp and (
+            resp['type'] == 'file' or resp['type'] == 'symlink'):
         return resp['sha']
     else:
         # it's a directory
@@ -86,7 +87,8 @@ def create_branch(cookie, config, branch):
 
 
 def write_file(cookie, config, branch, data, file_sha=False):
-    url = f'/repos/{config["repo_name"]}/contents/{config["repo_path"]}{config["file_name"]}'
+    url = (f'/repos/{config["repo_name"]}/contents/'
+           f'{config["repo_path"]}{config["file_name"]}')
 
     params = {
         'message': 'Automatically committed by the Laundromat',
@@ -97,7 +99,7 @@ def write_file(cookie, config, branch, data, file_sha=False):
     if file_sha is not False:
         params['sha'] = file_sha
 
-    resp = oauth.github.put(
+    oauth.github.put(
         url,
         json=params,
         token=cookie.session.get('github_credentials'),
@@ -127,7 +129,9 @@ def send_file(cookie, data):
     if branch == '__auto__':
         branch = f'laundromat_{str(datetime.datetime.now().timestamp())[0:10]}'
         create_branch(cookie, config, branch)
-    resp = write_file(cookie, config, branch, data, file_sha)
-    resp = create_pr(cookie, config, branch)
+    write_file(cookie, config, branch, data, file_sha)
+    create_pr(cookie, config, branch)
+
+    # TODO verify this is actually working before returning true
 
     return True

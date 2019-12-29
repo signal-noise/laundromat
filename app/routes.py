@@ -80,7 +80,8 @@ def index():
             return c.redirect(url_for('sync'))
 
         context['title'] = "All checks completed"
-        context['instruction'] = "Setup your sheet for easier direct sync in future."
+        context['instruction'] = (
+            "Setup your sheet for easier direct sync in future.")
         context['action'] = url_for('instructions')
         context['cta'] = "Set your sheet up"
 
