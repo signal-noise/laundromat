@@ -1,21 +1,28 @@
 {% extends 'bootstrap/base.html' %} {% block title %} {% if title %}{{ title }}
-- {% endif %}Laundromat {% endblock %} {% block navbar %}
-<nav class="navbar navbar-inverse" style="border-radius: 0;">
-  <a href="/" class="navbar-brand">Laundromat</a>
+- {% endif %}Laundromat {% endblock %} {% block styles %} {{super()}}
+<link rel="stylesheet" href="{{url_for('.static', filename='site.css')}}" />
+{% endblock %} {% block navbar %}
+<nav class="navbar navbar-default">
+  <a href="/" class="navbar-brand" id="laundromat-logo"
+    ><img src="{{url_for('.static', filename='washing-machine.svg')}}" />
+  </a>
+  <a href="/" class="navbar-brand">Laundromat </a>
   {% if context.google_creds %}
-  <div class="navbar-nav navbar-right" style="margin-right:15px;">
+  <div class="navbar-nav navbar-right">
     <a
       class="nav-item nav-link"
       href="https://docs.google.com/spreadsheets/u/0/"
       target="_new"
-      >Your Sheets</a
-    >
+      ><img src="{{url_for('.static', filename='sheets-icon.jpg')}}"
+    /></a>
     {% if context.github_creds %}
     <a class="nav-item nav-link" href="https://github.com" target="_new"
-      >Github</a
-    >
-    <a class="nav-item nav-link" href="{{ url_for('setup_sheet') }}"
-      >Configure</a
+      ><img src="{{url_for('.static', filename='github-icon.png')}}"
+    /></a>
+    <a class="nav-item nav-link" href="{{ url_for('setup_sheet') }}">
+      <button type="button" class="btn btn-default btn-xs navbar-btn">
+        Configure
+      </button></a
     >
     {% endif %}
     <a class="nav-item nav-link" href="{{ url_for('logout') }}">
@@ -27,12 +34,12 @@
   {% endif %}
 </nav>
 {% endblock %} {% block content %}
-<div class="container" style="max-width:768px;">
+<div class="container">
   {% if message %} {% set class = 'alert alert-' ~ message_context or 'info' %}
   <div class="{{ class }}" role="alert">{{ message }}</div>
   {% endif %} {% block app_content %}{% endblock %} {% if action %}
   <div class="row">
-    <div class="col-md-3 col-md-offset-9" style="text-align: right;">
+    <div class="col-md-3 col-md-offset-9 right-align">
       <a href="{{ action }}"
         ><button class="btn btn-primary">{{ cta }}</button></a
       >

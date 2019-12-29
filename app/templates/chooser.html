@@ -4,13 +4,12 @@
 <p>{{ description }}</p>
 
 <div class="row">
-  <div style="text-align: center;">
+  <div class="center-align">
     <div class="btn-group-vertical" role="group">
       {% for item in data %} {% set name = item[name_field] or item.name %}
       <a
         href="/?{{ choice_var }}={{ item.id }}&n={{ name }}"
-        class="btn btn-default"
-        style="text-align: left;"
+        class="btn btn-default left-align"
         >{{ name }}</a
       >
       {% endfor %}

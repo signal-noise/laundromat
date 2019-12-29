@@ -5,7 +5,7 @@
   <div class="form-group">
     <label for="spreadsheet_name" class="col-sm-3 control-label">Spreadsheet</label>
     <div class="col-sm-9">
-      <input type="text" class="form-control" id="spreadsheet_name" name="spreadsheet_name" value="{{ context.spreadsheet_name }}" disabled="disabled" style="width:calc(100% - 50px);display:inline">
+      <input type="text" class="form-control form-control-shorter" id="spreadsheet_name" name="spreadsheet_name" value="{{ context.spreadsheet_name }}" disabled="disabled">
         <a href="{{ url_for('sheets') }}" class="btn btn-default btn-xs">Select</a>
     </div>
   </div>
@@ -22,7 +22,7 @@
   <div class="form-group">
     <label for="repo_name" class="col-sm-3 control-label">Repository</label>
     <div class="col-sm-9">
-      <input type="text" class="form-control" id="repo_name" name="repo_name" value="{{ context.repository_name }}" style="width:calc(100% - 50px);display:inline">
+      <input type="text" class="form-control form-control-shorter" id="repo_name" name="repo_name" value="{{ context.repository_name }}">
         <a href="{{ url_for('repos') }}" class="btn btn-default btn-xs">Select</a>
     </div>
   </div>
@@ -65,7 +65,7 @@
   </div>
 <p>{{ description }}</p>
   <div class="form-group">
-    <div class="col-sm-offset-2 col-sm-9">
+    <div class="col-sm-offset-9 col-sm-3 right-align">
       <button type="submit" class="btn btn-primary">Write to sheet</button>
     </div>
   </div>

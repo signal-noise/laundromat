@@ -253,6 +253,10 @@ def sync():
 def instructions():
     context = {}
     c = Cookie(request)
+    context['message'] = c.session.pop('message')
+    context['message_context'] = c.session.pop('message_context', 'info')
+    context['google_creds'] = c.session.get('google_credentials')
+    context['github_creds'] = c.session.get('github_credentials')
     context['action'] = url_for('sync')
     context['cta'] = "Just sync the data now"
     return c.render_template('instructions.html', context=context)
