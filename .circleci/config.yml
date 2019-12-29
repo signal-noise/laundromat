@@ -2,7 +2,7 @@ version: 2
 
 jobs:
   test:
-    docker: 
+    docker:
       - image: circleci/python:3.8
     steps:
       - checkout
@@ -11,13 +11,43 @@ jobs:
 
   build:
     docker:
-      - image: circleci/python:3.8
-    steps: 
+      - image: signalnoise/base:12
+    steps:
       - setup_remote_docker
+      - run:
+          name: Install docker client
+          command: |
+            apk update
+            apk add docker zip
       - checkout
-      - run: |
-          docker build -t laundromat:${VERSION} .
-          docker tag laundromat:${VERSION} laundromat:latest
+      - run:
+          name: Authenticate and set defaults to environment
+          command: |
+            echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
+            gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
+            cat ${HOME}/gcloud-service-key.json | docker login -u _json_key --password-stdin https://eu.gcr.io
+            gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+            gcloud components update
+      - run:
+          name: Build, push and deploy container
+          command: |
+            docker build \
+              --build-arg SECRET_KEY=${SECRET_KEY} \
+              --build-arg GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID} \
+              --build-arg GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET} \
+              --build-arg BASE_URL=${BASE_URL} \
+              -t eu.gcr.io/${GOOGLE_PROJECT_ID}/laundromat:${VERSION} \
+              .
+            docker tag eu.gcr.io/${GOOGLE_PROJECT_ID}/laundromat:${VERSION} eu.gcr.io/${GOOGLE_PROJECT_ID}/laundromat:latest
+            docker push eu.gcr.io/${GOOGLE_PROJECT_ID}/laundromat:${VERSION}
+            gcloud run deploy ${ENVIRONMENT} \
+              --async \
+              --image eu.gcr.io/${GOOGLE_PROJECT_ID}/laundromat:${VERSION} \
+              --platform managed \
+              --allow-unauthenticated \
+              --labels=version=${VERSION} \
+              --region europe-west1 \
+              --memory 512M
 
 notify:
   webhooks:
