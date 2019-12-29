@@ -17,7 +17,6 @@ def get_flow(state=None):
     """Configures the google-specific SDK that does the hard work"""
     args = ['/config/client_secret.json',
             ['https://www.googleapis.com/auth/drive.metadata.readonly',
-             #  'https://www.googleapis.com/auth/drive',
              'https://www.googleapis.com/auth/drive.file',
              'https://www.googleapis.com/auth/drive.install',
              'https://www.googleapis.com/auth/spreadsheets',
@@ -76,7 +75,7 @@ def get_all_spreadsheets(credentials):
     return items
 
 
-def get_spreadsheet_raw(credentials, spreadsheet_id):
+def get_spreadsheet_metadata(credentials, spreadsheet_id):
     service = get_service(credentials)
     results = service.spreadsheets().get(
         spreadsheetId=spreadsheet_id).execute()
@@ -85,13 +84,14 @@ def get_spreadsheet_raw(credentials, spreadsheet_id):
 
 def get_sheets(credentials, spreadsheet_id):
     return [x['properties']['title']
-            for x in get_spreadsheet_raw(
+            for x in get_spreadsheet_metadata(
                 credentials, spreadsheet_id).get('sheets', [])
             if x['properties']['title'] != 'Laundromat']
 
 
 def is_configured(credentials, spreadsheet_id):
-    sheets = get_spreadsheet_raw(credentials, spreadsheet_id).get('sheets', [])
+    sheets = get_spreadsheet_metadata(
+        credentials, spreadsheet_id).get('sheets', [])
     for sheet in sheets:
         if sheet['properties']['title'] == 'Laundromat':
             return sheet['properties']['sheetId']
@@ -214,6 +214,15 @@ def configure_spreadsheet(credentials, spreadsheet_id, config):
                             }
                         },
                     ]
+                },
+                {
+                    'values': [
+                        {
+                            "userEnteredValue": {
+                                "stringValue": 'Edit these values directly, or using the Laundromat tool. Please don\'t edit the heading names, and take care with typos.'
+                            }
+                        },
+                    ]
                 }
             ]
         }
@@ -279,7 +288,7 @@ def columnToLetter(column):
 
 
 def get_data(credentials, spreadsheet_id, config):
-    metadata = get_spreadsheet_raw(credentials, spreadsheet_id)
+    metadata = get_spreadsheet_metadata(credentials, spreadsheet_id)
     for item in metadata['sheets']:
         if item['properties']['title'] == config['sheet_name']:
             max_row = item['properties']['gridProperties']['rowCount']

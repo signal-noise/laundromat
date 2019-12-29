@@ -1,11 +1,81 @@
-{% extends "base.html" %} 
-{% block app_content %}
-    <h1>Configure your spreadsheet</h1>
-    <p>How to setup your sheet to do this directly. If you just want to sync manually now just hit the button at the bottom of this page</p>
-    <p>Make sure it's been configured - check for a worksheet called Laundromat, with...</p>
-    <p>Tools > Script Editor</p>
-    <p>paste in the following:</p>
-    <pre></pre>
-    <p>Publish > Deploy as Sheets Add-on</p>
-    <p>Use from Tools > xxx</p>
+{% extends "base.html" %} {% block app_content %}
+<h1>Configure your spreadsheet</h1>
+<p>
+  Complete these simple steps to put menu button on the spreadsheet, so that you
+  can trigger this functionality even more simply next time. It won't take
+  long...
+</p>
+<p>
+  If you want to skip this and just sync manually now, hit the button at the
+  bottom of this page.
+</p>
+<ol>
+  <li>
+    First of all make sure your spreadsheet is configured. If you've been
+    through the steps on this tool it will be, but to be certain check for a
+    worksheet called Laundromat, with the same headings and values as on the
+    'Configure' page of this tool.
+  </li>
+  <li>
+    In the main Spreadsheets menu, choose Tools > Script Editor. If you are
+    presented with a welcome screen, click Blank Project on the left to start a
+    new project.
+    <br /><img
+      src="{{ url_for('.static', filename='instructions-tools.png') }}"
+      style="height:150px;"
+    /><br />
+    This will open a new window looking like a code editor. Don't worry - it's
+    all pretty easy!
+  </li>
+  <li>
+    Delete any code in the script editor, and paste in the following:
+    <pre>function onOpen() {
+    var ui = SpreadsheetApp.getUi();
+    ui.createMenu('Laundromat')
+        .addItem('Send sheet', 'send')
+        .addSeparator()
+        .addItem('Configure', 'configure')
+        .addToUi();
+  }
+  
+  function send() {
+    var url = 'https://laundromat.signal-noise.co.uk/?s=&auto=true';
+    
+    var options = {
+      "method"  : "GET",   
+      "followRedirects" : true,
+      "muteHttpExceptions": true
+    };
+      
+    var result = UrlFetchApp.fetch(url, options);
+    
+    if (result.getResponseCode() == 200) {
+      var params = JSON.parse(result.getContentText());
+      SpreadsheetApp.getUi()
+      .alert('Sheet sent to Laundromat successfully');
+    }
+    else {
+      SpreadsheetApp.getUi()
+      .alert('Something went wrong with laundromat, try using the tool directly.');
+    }
+  }
+  
+  function configure() {
+    var html = '<html><body><a href="https://laundromat.signal-noise.co.uk" target="blank" onclick="google.script.host.close()">Open Laundromat</a></body></html>';
+    var ui = HtmlService.createHtmlOutput(html)
+    SpreadsheetApp.getUi().showModelessDialog(ui,"demo");
+  }</pre>
+  </li>
+  <li>
+    Choose File > save in the editor interface, then refresh your spreadsheet
+    window.
+    <br /><img
+      src="{{ url_for('.static', filename='instructions-finalmenu.png') }}"
+      style="height:150px;"
+    /><br />
+    You should see a new menu item appear for Laundromat; it will contain an
+    item to automatically send your sheet and another to easily revisit this
+    tool.
+  </li>
+</ol>
 {% endblock %}
