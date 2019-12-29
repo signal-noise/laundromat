@@ -138,6 +138,7 @@ def send_file(credentials, config, data):
         branch = f'laundromat_{str(datetime.datetime.now().timestamp())[0:10]}'
         create_branch(credentials,
                       config['repo_name'], config['pr_target'], branch)
+
     write_file(credentials,
                config['repo_name'],
                config['repo_path'],
@@ -145,8 +146,12 @@ def send_file(credentials, config, data):
                branch,
                data,
                file_sha)
-    create_pr(credentials,
-              config['repo_name'], config['pr_target'], branch)
+
+    if (config['skip_pr'] != 'on' and
+            config['skip_pr'] != 'true' and
+            config['skip_pr'] is not True):
+        create_pr(credentials,
+                  config['repo_name'], config['pr_target'], branch)
 
     # TODO verify this is actually working before returning true
 
