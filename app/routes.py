@@ -80,9 +80,9 @@ def index():
             return c.redirect(url_for('sync'))
 
         context['title'] = "All checks completed"
-        context['instruction'] = "Trigger the sync manually using the button below, or setup your sheet for easier direct sync in future."
-        context['action'] = url_for('sync')
-        context['cta'] = "Send"
+        context['instruction'] = "Setup your sheet for easier direct sync in future."
+        context['action'] = url_for('instructions')
+        context['cta'] = "Set your sheet up"
 
     return c.render_template(context=context)
 
@@ -249,5 +249,8 @@ def sync():
 
 @app.route('/instructions')
 def instructions():
+    context = {}
     c = Cookie(request)
-    return c.render_template('instructions.html')
+    context['action'] = url_for('sync')
+    context['cta'] = "Just sync the data now"
+    return c.render_template('instructions.html', context=context)
