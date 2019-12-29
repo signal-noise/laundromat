@@ -18,15 +18,19 @@ from app.github import (
 from app.cookie import Cookie
 
 
-@app.route('/')
-def index():
+def init_request_vars():
     context = {}
     c = Cookie(request)
     context['message'] = c.session.pop('message')
     context['message_context'] = c.session.pop('message_context', 'info')
     context['google_creds'] = c.session.get('google_credentials')
     context['github_creds'] = c.session.get('github_credentials')
+    return c, context
 
+
+@app.route('/')
+def index():
+    c, context = init_request_vars()
     context['spreadsheet_id'] = request.args.get('s')
     context['spreadsheet_name'] = request.args.get('n')
     if context['spreadsheet_id'] is not None:
@@ -56,17 +60,19 @@ def index():
         is_configured(c, context['spreadsheet_id']) is not False)
 
     if context['google_creds'] is None or context['google_creds'] == {}:
-        context['title'] = "Google authentication needed"
+        context['title'] = "Login"
         context['instruction'] = (
             "You need to sign in with your Google Account"
-            " before you can go any further")
+            " before you can go any further, in order"
+            " to access your spreadsheets")
         context['action'] = url_for('trigger_google_auth')
         context['cta'] = "Login with Google"
     elif context['github_creds'] is None or context['github_creds'] == {}:
-        context['title'] = "Github authentication needed"
+        context['title'] = "Login again"
         context['instruction'] = (
             "You need to sign in with your Github Account"
-            " before you can go any further")
+            " before you can go any further, in order"
+            " to access your repositories")
         context['action'] = url_for('trigger_github_auth')
         context['cta'] = "Login with Github"
     elif context['spreadsheet_id'] is None:
@@ -79,9 +85,9 @@ def index():
         if request.args.get('auto') == 'true':
             return c.redirect(url_for('sync'))
 
-        context['title'] = "All checks completed"
+        context['title'] = "Ready for service wash!"
         context['instruction'] = (
-            "Setup your sheet for easier direct sync in future.")
+            "All checks completed. Setup your sheet for easier direct sync in future.")
         context['action'] = url_for('instructions')
         context['cta'] = "Set your sheet up"
 
@@ -135,17 +141,12 @@ def logout():
 
 @app.route('/choose_sheet')
 def sheets():
-    context = {}
-    c = Cookie(request)
-    context['message'] = c.session.pop('message')
-    context['message_context'] = c.session.pop('message_context', 'info')
-    context['google_creds'] = c.session.get('google_credentials')
-    context['github_creds'] = c.session.get('github_credentials')
+    c, context = init_request_vars()
 
     sheets = get_all_spreadsheets(c)
     context['data'] = sheets
     context['title'] = "Select a sheet"
-    context['instruction'] = "Choose which sheet to send over"
+    context['instruction'] = "Choose which sheet to send to the Laundromat"
     context['description'] = (
         "Only the sheets you've edited most recently appear here; "
         "if you don't see the one you expect please edit it and "
@@ -156,18 +157,16 @@ def sheets():
 
 @app.route('/choose_repo')
 def repos():
-    context = {}
-    c = Cookie(request)
-    context['message'] = c.session.pop('message')
-    context['message_context'] = c.session.pop('message_context', 'info')
-    context['google_creds'] = c.session.get('google_credentials')
-    context['github_creds'] = c.session.get('github_credentials')
+    c, context = init_request_vars()
 
     repos = get_all_repos(c.session.get('github_credentials'))
     context['data'] = repos
     context['title'] = "Select a repository"
     context['instruction'] = "Choose which repository to connect to this sheet"
-    context['description'] = "Your most recently updated repos are shown here"
+    context['description'] = (
+        "Your most recently updated repos are shown here"
+        "if you don't see the one you expect please edit it and "
+        "refresh this page.")
     context['choice_var'] = 'r'
     context['name_field'] = 'full_name'
     return c.render_template('chooser.html', context=context)
@@ -175,16 +174,13 @@ def repos():
 
 @app.route('/setup_sheet', methods=['GET', 'POST'])
 def setup_sheet():
-    context = {}
-    c = Cookie(request)
-    context['message'] = c.session.pop('message')
-    context['message_context'] = c.session.pop('message_context', 'info')
-    context['google_creds'] = c.session.get('google_credentials')
-    context['github_creds'] = c.session.get('github_credentials')
+    c, context = init_request_vars()
     context['spreadsheet_name'] = c.session.get('spreadsheet_name')
 
     context['title'] = "Setup the sheet"
-    context['instruction'] = "Configure the details of the sync"
+    context['instruction'] = (
+        "Configure the details of how the"
+        " sheet ends up in the repository")
     context['description'] = (
         "These details will be saved in a new worksheet called 'Laundromat',"
         " which will be created on your selected spreadsheet. In future you"
@@ -226,12 +222,7 @@ def setup_sheet():
 
 @app.route('/sync')
 def sync():
-    context = {}
-    c = Cookie(request)
-    context['message'] = c.session.pop('message')
-    context['message_context'] = c.session.pop('message_context', 'info')
-    context['google_creds'] = c.session.get('google_credentials')
-    context['github_creds'] = c.session.get('github_credentials')
+    c, context = init_request_vars()
 
     context['title'] = "Sync"
     context['instruction'] = "probably set a message and redirect i guess"
@@ -253,12 +244,7 @@ def sync():
 
 @app.route('/instructions')
 def instructions():
-    context = {}
-    c = Cookie(request)
-    context['message'] = c.session.pop('message')
-    context['message_context'] = c.session.pop('message_context', 'info')
-    context['google_creds'] = c.session.get('google_credentials')
-    context['github_creds'] = c.session.get('github_credentials')
+    c, context = init_request_vars()
     context['action'] = url_for('sync')
     context['cta'] = "Just sync the data now"
     return c.render_template('instructions.html', context=context)
