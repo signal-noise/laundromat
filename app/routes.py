@@ -223,7 +223,6 @@ def setup_sheet():
 @app.route('/sync')
 def sync():
     c, context = init_request_vars()
-
     context['title'] = "Sync"
     context['instruction'] = "probably set a message and redirect i guess"
     context['description'] = ""
