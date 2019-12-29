@@ -1,0 +1,37 @@
+.navbar {
+  border-radius: 0;
+}
+
+img {
+  height: 30px;
+}
+
+#laundromat-logo {
+  padding-top: 10px;
+  padding-right: 0;
+}
+
+.navbar-right {
+  margin-right: 10px;
+}
+
+.container {
+  max-width: 768px;
+}
+
+.right-align {
+  text-align: right;
+}
+
+.left-align {
+  text-align: left;
+}
+
+.center-align {
+  text-align: center;
+}
+
+.form-control-shorter {
+  width: calc(100% - 50px);
+  display: inline;
+}
