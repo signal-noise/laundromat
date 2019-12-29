@@ -109,7 +109,7 @@ def index():
             context['title'] = "All done"
             context['instruction'] = (
                 "Your sheet has been sent to "
-                f'<a href="https://github.com/{c.session.get("config").get("repo_name")}/pulls">'
+                f'<a href="https://github.com/{c.session.get("config").get("repo_name")}/pulls">'  # noqa
                 f'the repo</a>'
                 " and is ready for you to pick up there.")
         else:
