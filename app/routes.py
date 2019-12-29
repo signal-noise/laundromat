@@ -13,7 +13,7 @@ from app.github import (
     complete_auth as complete_github_auth,
     get_all_repos,
     get_auth_url as get_github_auth_url,
-    write_file,
+    send_file,
 )
 from app.cookie import Cookie
 
@@ -236,5 +236,12 @@ def sync():
     context['description'] = ""
 
     csv_str = get_data(c, c.session.get('spreadsheet_id'))
-    context['data'] = write_file(c, csv_str)
+    if (send_file(c, csv_str)):
+        c.session.set('message', 'Sync completed successfully')
+        c.session.set('message_context', 'success')
+        c.redirect('/')
+    else:
+        context['message'] = 'Something went wrong'
+        context['message_context'] = 'error'
+
     return c.render_template(context=context)

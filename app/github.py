@@ -64,7 +64,7 @@ def check_if_file_exists(cookie):
     elif 'type' in resp and (resp['type'] == 'file' or resp['type'] == 'symlink'):
         return resp['sha']
     else:
-        # directory
+        # it's a directory
         return False
 
 
@@ -73,7 +73,6 @@ def create_branch(cookie, config, branch):
         f'repos/{config["repo_name"]}/git/refs/heads/{config["pr_target"]}',
         token=cookie.session.get('github_credentials'),
     ).json()
-    print(resp)
     sha = resp['object']['sha']
     resp = oauth.github.post(
         f'repos/{config["repo_name"]}/git/refs',
@@ -83,18 +82,11 @@ def create_branch(cookie, config, branch):
         },
         token=cookie.session.get('github_credentials'),
     ).json()
-    print(resp)
     return resp
 
 
-def write_file(cookie, data):
-    config = cookie.session.get('config')
+def write_file(cookie, config, branch, data, file_sha=False):
     url = f'/repos/{config["repo_name"]}/contents/{config["repo_path"]}{config["file_name"]}'
-    file_sha = check_if_file_exists(cookie)
-    branch = config['repo_branch']
-    if branch == '__auto__':
-        branch = f'laundromat_{str(datetime.datetime.now().timestamp())[0:10]}'
-        create_branch(cookie, config, branch)
 
     params = {
         'message': 'Automatically committed by the Laundromat',
@@ -111,4 +103,31 @@ def write_file(cookie, data):
         token=cookie.session.get('github_credentials'),
     ).json()
 
+
+def create_pr(cookie, config, branch):
+    params = {
+        'title': 'CSV updated',
+        'head': branch,
+        'base': config["pr_target"],
+        'body': 'PR automatically created by Laundromat',
+    }
+    resp = oauth.github.post(
+        f'repos/{config["repo_name"]}/pulls',
+        json=params,
+        token=cookie.session.get('github_credentials'),
+    ).json()
     return resp
+
+
+def send_file(cookie, data):
+    config = cookie.session.get('config')
+    file_sha = check_if_file_exists(cookie)
+
+    branch = config['repo_branch']
+    if branch == '__auto__':
+        branch = f'laundromat_{str(datetime.datetime.now().timestamp())[0:10]}'
+        create_branch(cookie, config, branch)
+    resp = write_file(cookie, config, branch, data, file_sha)
+    resp = create_pr(cookie, config, branch)
+
+    return True
