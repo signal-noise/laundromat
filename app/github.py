@@ -1,4 +1,5 @@
 import base64
+import datetime
 import json
 import os
 
@@ -67,13 +68,38 @@ def check_if_file_exists(cookie):
         return False
 
 
+def create_branch(cookie, config, branch):
+    resp = oauth.github.get(
+        f'repos/{config["repo_name"]}/git/refs/heads/{config["pr_target"]}',
+        token=cookie.session.get('github_credentials'),
+    ).json()
+    print(resp)
+    sha = resp['object']['sha']
+    resp = oauth.github.post(
+        f'repos/{config["repo_name"]}/git/refs',
+        json={
+            'sha': sha,
+            'ref': f'refs/heads/{branch}',
+        },
+        token=cookie.session.get('github_credentials'),
+    ).json()
+    print(resp)
+    return resp
+
+
 def write_file(cookie, data):
     config = cookie.session.get('config')
     url = f'/repos/{config["repo_name"]}/contents/{config["repo_path"]}{config["file_name"]}'
     file_sha = check_if_file_exists(cookie)
+    branch = config['repo_branch']
+    if branch == '__auto__':
+        branch = f'laundromat_{str(datetime.datetime.now().timestamp())[0:10]}'
+        create_branch(cookie, config, branch)
+
     params = {
         'message': 'Automatically committed by the Laundromat',
-        'content': base64.b64encode(data.encode('utf-8')).decode('utf-8')
+        'content': base64.b64encode(data.encode('utf-8')).decode('utf-8'),
+        'branch': branch
     }
 
     if file_sha is not False:
