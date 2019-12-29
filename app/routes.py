@@ -80,7 +80,7 @@ def index():
             return c.redirect(url_for('sync'))
 
         context['title'] = "All checks completed"
-        context['instruction'] = "Let's send your sheet over!"
+        context['instruction'] = "Trigger the sync manually using the button below, or setup your sheet for easier direct sync in future."
         context['action'] = url_for('sync')
         context['cta'] = "Send"
 
@@ -239,9 +239,15 @@ def sync():
     if (send_file(c, csv_str)):
         c.session.set('message', 'Sync completed successfully')
         c.session.set('message_context', 'success')
-        c.redirect('/')
+        return c.redirect('/')
     else:
         context['message'] = 'Something went wrong'
         context['message_context'] = 'error'
 
     return c.render_template(context=context)
+
+
+@app.route('/instructions')
+def instructions():
+    c = Cookie(request)
+    return c.render_template('instructions.html')
