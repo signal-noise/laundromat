@@ -248,9 +248,21 @@ def get_config(cookie, spreadsheet_id):
         range=datarange,
         majorDimension='COLUMNS',
     ).execute()
+
     config = {}
     for i in result['values']:
         config[i[0]] = i[1]
+
+    if config['repo_path'].startswith('/'):
+        config['repo_path'] = config['repo_path'][1:]
+    if not config['repo_path'].endswith('/'):
+        config['repo_path'] += '/'
+
+    if config['skip_pr'] == "FALSE":
+        config['skip_pr'] = False
+    elif config['skip_pr'] == "TRUE":
+        config['skip_pr'] = True
+
     cookie.session.set('config', config)
     return config
 
