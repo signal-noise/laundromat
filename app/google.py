@@ -219,7 +219,10 @@ def configure_spreadsheet(credentials, spreadsheet_id, config):
                     'values': [
                         {
                             "userEnteredValue": {
-                                "stringValue": 'Edit these values directly, or using the Laundromat tool. Please don\'t edit the heading names, and take care with typos.'
+                                "stringValue": (
+                                    'Edit these values directly, or using the '
+                                    'Laundromat tool. Please don\'t edit the '
+                                    'heading names, and take care with typos.')
                             }
                         },
                     ]

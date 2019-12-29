@@ -60,7 +60,9 @@ def index():
     context['sheet_is_setup'] = (
         context['google_creds'] is not None and
         context['spreadsheet_id'] is not None and
-        is_configured(context['google_creds'], context['spreadsheet_id']) is not False)
+        is_configured(
+            context['google_creds'],
+            context['spreadsheet_id']) is not False)
 
     if context['google_creds'] is None or context['google_creds'] == {}:
         context['title'] = "Login"
@@ -90,7 +92,8 @@ def index():
 
         context['title'] = "Ready for service wash!"
         context['instruction'] = (
-            "All checks completed. Setup your sheet for easier direct sync in future.")
+            "All checks completed. Setup your sheet for"
+            " easier direct sync in future.")
         context['action'] = url_for('instructions')
         context['cta'] = "Set your sheet up"
 

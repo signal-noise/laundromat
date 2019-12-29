@@ -84,7 +84,14 @@ def create_branch(credentials, repo_name, pr_target, branch):
     return resp
 
 
-def write_file(credentials, repo_name, path, file_name, branch, data, file_sha=False):
+def write_file(
+        credentials,
+        repo_name,
+        path,
+        file_name,
+        branch,
+        data,
+        file_sha=False):
     url = (f'/repos/{repo_name}/contents/'
            f'{path}{file_name}')
 
@@ -121,7 +128,10 @@ def create_pr(credentials, repo_name, pr_target, branch):
 
 def send_file(credentials, config, data):
     file_sha = sha_if_file_exists(
-        credentials, config['repo_name'], config['repo_path'], config['file_name'])
+        credentials,
+        config['repo_name'],
+        config['repo_path'],
+        config['file_name'])
 
     branch = config['repo_branch']
     if branch == '__auto__':
@@ -129,7 +139,12 @@ def send_file(credentials, config, data):
         create_branch(credentials,
                       config['repo_name'], config['pr_target'], branch)
     write_file(credentials,
-               config['repo_name'], config['repo_path'], config['file_name'], branch, data, file_sha)
+               config['repo_name'],
+               config['repo_path'],
+               config['file_name'],
+               branch,
+               data,
+               file_sha)
     create_pr(credentials,
               config['repo_name'], config['pr_target'], branch)
 
