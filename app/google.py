@@ -8,10 +8,10 @@ from flask import url_for
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
+
 #
 # Auth
 #
-
 
 def get_flow(state=None):
     """Configures the google-specific SDK that does the hard work"""
@@ -103,6 +103,7 @@ def is_configured(cookie, spreadsheet_id):
     sheets = get_spreadsheet_raw(cookie, spreadsheet_id).get('sheets', [])
     for sheet in sheets:
         if sheet['properties']['title'] == 'Laundromat':
+            get_config(cookie, spreadsheet_id)
             return sheet['properties']['sheetId']
     return False
 
@@ -135,6 +136,11 @@ def configure_spreadsheet(cookie, spreadsheet_id, config):
     creds_dict = cookie.session.get('google_credentials')
     creds = pickle.loads(creds_dict['pickled'])
     service = build('sheets', 'v4', credentials=creds)
+    path = config['repo_path']
+    if path.startswith('/'):
+        path = path[1:]
+    if not path.endswith('/'):
+        path += '/'
     requests = [{
         "updateCells": {
             "start": {
@@ -214,7 +220,7 @@ def configure_spreadsheet(cookie, spreadsheet_id, config):
                         },
                         {
                             "userEnteredValue": {
-                                "stringValue": config['repo_path']
+                                "stringValue": path
                             }
                         },
                         {
@@ -245,6 +251,7 @@ def get_config(cookie, spreadsheet_id):
     config = {}
     for i in result['values']:
         config[i[0]] = i[1]
+    cookie.session.set('config', config)
     return config
 
 

@@ -13,6 +13,7 @@ from app.github import (
     complete_auth as complete_github_auth,
     get_all_repos,
     get_auth_url as get_github_auth_url,
+    write_file,
 )
 from app.cookie import Cookie
 
@@ -69,27 +70,10 @@ def index():
         context['action'] = url_for('trigger_github_auth')
         context['cta'] = "Login with Github"
     elif context['spreadsheet_id'] is None:
-        # context['title'] = "No spreadsheet selected"
-        # context['instruction'] = (
-        #     "You need to select a spreadsheet"
-        #     " before you can go any further")
-        # context['action'] = url_for('sheets')
-        # context['cta'] = "Select Sheet"
         return c.redirect(url_for('sheets'))
-    elif context['repo_name'] is None:
-        # context['title'] = "No repository selected"
-        # context['instruction'] = (
-        #     "You need to select a repo before you can go any further")
-        # context['action'] = url_for('repos')
-        # context['cta'] = "Select Repo"
+    elif context['sheet_is_setup'] is False and context['repo_name'] is None:
         return c.redirect(url_for('repos'))
     elif context['sheet_is_setup'] is False:
-        # context['title'] = "Spreadsheet is not configured"
-        # context['instruction'] = (
-        #     "You need to setup your sheet for sync. Let's do that"
-        #     " automatically right now")
-        # context['action'] = url_for('setup_sheet')
-        # context['cta'] = "Setup sheet"
         return c.redirect(url_for('setup_sheet'))
     else:
         if request.args.get('auto') == 'true':
@@ -251,5 +235,6 @@ def sync():
     context['instruction'] = "probably set a message and redirect i guess"
     context['description'] = ""
 
-    context['data'] = get_data(c, c.session.get('spreadsheet_id'))
+    csv_str = get_data(c, c.session.get('spreadsheet_id'))
+    context['data'] = write_file(c, csv_str)
     return c.render_template(context=context)

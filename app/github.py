@@ -1,9 +1,16 @@
+import base64
+import json
 import os
 
 from authlib.integrations.flask_client import OAuth
 from flask import url_for
 
 from app import app
+
+
+#
+# Auth
+#
 
 oauth = OAuth(app)
 oauth.register(
@@ -30,8 +37,52 @@ def complete_auth(cookie):
     return
 
 
+#
+# Getting lists and metadata for UI etc
+#
+
 def get_all_repos(cookie):
     resp = oauth.github.get(
         '/user/repos?sort="pushed"',
         token=cookie.session.get('github_credentials'))
     return resp.json()
+
+
+#
+# CSV import
+#
+
+def check_if_file_exists(cookie):
+    config = cookie.session.get('config')
+    url = f'/repos/{config["repo_name"]}/contents/{config["repo_path"]}{config["file_name"]}'
+    resp = oauth.github.get(
+        url,
+        token=cookie.session.get('github_credentials')).json()
+    if 'message' in resp and resp['message'] == 'Not Found':
+        return False
+    elif 'type' in resp and (resp['type'] == 'file' or resp['type'] == 'symlink'):
+        return resp['sha']
+    else:
+        # directory
+        return False
+
+
+def write_file(cookie, data):
+    config = cookie.session.get('config')
+    url = f'/repos/{config["repo_name"]}/contents/{config["repo_path"]}{config["file_name"]}'
+    file_sha = check_if_file_exists(cookie)
+    params = {
+        'message': 'Automatically committed by the Laundromat',
+        'content': base64.b64encode(data.encode('utf-8')).decode('utf-8')
+    }
+
+    if file_sha is not False:
+        params['sha'] = file_sha
+
+    resp = oauth.github.put(
+        url,
+        json=params,
+        token=cookie.session.get('github_credentials'),
+    ).json()
+
+    return resp
