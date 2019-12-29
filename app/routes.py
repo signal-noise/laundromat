@@ -1,3 +1,4 @@
+import pickle
 from flask import request, url_for
 from app import app
 from app.google import (
@@ -5,6 +6,7 @@ from app.google import (
     configure_spreadsheet,
     get_all_spreadsheets,
     get_auth_url as get_google_auth_url,
+    get_config,
     get_data,
     get_sheets,
     is_configured,
@@ -57,7 +59,7 @@ def index():
     context['sheet_is_setup'] = (
         context['google_creds'] is not None and
         context['spreadsheet_id'] is not None and
-        is_configured(c, context['spreadsheet_id']) is not False)
+        is_configured(context['google_creds'], context['spreadsheet_id']) is not False)
 
     if context['google_creds'] is None or context['google_creds'] == {}:
         context['title'] = "Login"
@@ -97,7 +99,8 @@ def index():
 @app.route('/google_auth')
 def trigger_google_auth():
     c = Cookie(request)
-    url = get_google_auth_url(c)
+    url, state = get_google_auth_url()
+    c.session.set('state', state)
     return c.redirect(url)
 
 
@@ -109,7 +112,11 @@ def process_google_auth_response():
         c.session.set('message', f'Error logging in to Google: {error}')
         c.session.set('message_context', 'warning')
     else:
-        complete_google_auth(c, request.url)
+        state = c.session.get('state')
+        creds = complete_google_auth(state, request.url)
+        c.session.set('google_credentials',
+                      pickle.dumps(creds))
+        c.session.delete('state')
         c.session.set('message', "Google login succeeded")
         c.session.set('message_context', 'success')
     return c.redirect('/')
@@ -143,7 +150,7 @@ def logout():
 def sheets():
     c, context = init_request_vars()
 
-    sheets = get_all_spreadsheets(c)
+    sheets = get_all_spreadsheets(c.session.get('google_credentials'))
     context['data'] = sheets
     context['title'] = "Select a sheet"
     context['instruction'] = "Choose which sheet to send to the Laundromat"
@@ -187,7 +194,8 @@ def setup_sheet():
         "  can edit this sheet directly, being careful since typos can break"
         " the script")
 
-    context['all_sheets'] = get_sheets(c, c.session.get('spreadsheet_id'))
+    context['all_sheets'] = get_sheets(
+        context['google_creds'], c.session.get('spreadsheet_id'))
 
     if request.method == 'POST':
         if c.session.get('repo_name') != request.form.get("repo_name"):
@@ -197,7 +205,8 @@ def setup_sheet():
         config = request.form.to_dict()
         config['skip_pr'] = request.form.get('skip_pr')
         response = configure_spreadsheet(
-            c, c.session.get('spreadsheet_id'), config)
+            context['google_creds'], c.session.get('spreadsheet_id'), config)
+        c.session.set('config', config)
         if len(response['replies']) > 0:
             c.session.set('message', 'Spreadsheet configured successfully')
             c.session.set('message_context', 'success')
@@ -227,7 +236,10 @@ def sync():
     context['instruction'] = "probably set a message and redirect i guess"
     context['description'] = ""
 
-    csv_str = get_data(c, c.session.get('spreadsheet_id'))
+    config = get_config(context['github_creds'],
+                        c.session.get('spreadsheet_id'))
+    c.session.set('config', config)
+    csv_str = get_data(c, c.session.get('spreadsheet_id'), config)
     outcome = send_file(context['github_creds'],
                         c.session.get('config'), csv_str)
     if (outcome is True):

@@ -17,7 +17,7 @@ def get_flow(state=None):
     """Configures the google-specific SDK that does the hard work"""
     args = ['/config/client_secret.json',
             ['https://www.googleapis.com/auth/drive.metadata.readonly',
-             'https://www.googleapis.com/auth/drive',
+             #  'https://www.googleapis.com/auth/drive',
              'https://www.googleapis.com/auth/drive.file',
              'https://www.googleapis.com/auth/drive.install',
              'https://www.googleapis.com/auth/spreadsheets',
@@ -33,43 +33,36 @@ def get_flow(state=None):
     return flow
 
 
-def get_auth_url(cookie):
+def get_auth_url():
     """Does the initial part of the auth request work"""
     flow = get_flow()
-    url, state = flow.authorization_url(
+    return flow.authorization_url(
         access_type='offline',
         include_granted_scopes='true')
-    cookie.session.set('state', state)
-    return url
 
 
-def complete_auth(cookie, url):
-    state = cookie.session.get('state')
+def complete_auth(state, url):
     flow = get_flow(state)
     flow.fetch_token(authorization_response=url)
-    credentials = flow.credentials
-    cookie.session.set('google_credentials', {
-        'token': credentials.token,
-        'refresh_token': credentials.refresh_token,
-        'token_uri': credentials.token_uri,
-        'client_id': credentials.client_id,
-        'client_secret': credentials.client_secret,
-        'scopes': credentials.scopes,
-        'pickled': pickle.dumps(credentials)
-    }
-    )
-    cookie.session.delete('state')
-    return
+    return flow.credentials
 
 
 #
 # Getting lists and metadata for UI and setting config
 #
 
-def get_all_spreadsheets(cookie):
-    creds_dict = cookie.session.get('google_credentials')
-    creds = pickle.loads(creds_dict['pickled'])
-    service = build('drive', 'v3', credentials=creds)
+
+def get_service(credentials, api='sheets'):
+    creds = pickle.loads(credentials)
+    if api == 'drive':
+        service = build('drive', 'v3', credentials=creds)
+    elif api == 'sheets':
+        service = build('sheets', 'v4', credentials=creds)
+    return service
+
+
+def get_all_spreadsheets(credentials):
+    service = get_service(credentials, 'drive')
     results = service.files().list(
         q="mimeType='application/vnd.google-apps.spreadsheet'",
         orderBy="modifiedTime desc",
@@ -83,37 +76,32 @@ def get_all_spreadsheets(cookie):
     return items
 
 
-def get_spreadsheet_raw(cookie, spreadsheet_id):
-    creds_dict = cookie.session.get('google_credentials')
-    creds = pickle.loads(creds_dict['pickled'])
-    service = build('sheets', 'v4', credentials=creds)
+def get_spreadsheet_raw(credentials, spreadsheet_id):
+    service = get_service(credentials)
     results = service.spreadsheets().get(
         spreadsheetId=spreadsheet_id).execute()
     return results
 
 
-def get_sheets(cookie, spreadsheet_id):
+def get_sheets(credentials, spreadsheet_id):
     return [x['properties']['title']
             for x in get_spreadsheet_raw(
-                cookie, spreadsheet_id).get('sheets', [])
+                credentials, spreadsheet_id).get('sheets', [])
             if x['properties']['title'] != 'Laundromat']
 
 
-def is_configured(cookie, spreadsheet_id):
-    sheets = get_spreadsheet_raw(cookie, spreadsheet_id).get('sheets', [])
+def is_configured(credentials, spreadsheet_id):
+    sheets = get_spreadsheet_raw(credentials, spreadsheet_id).get('sheets', [])
     for sheet in sheets:
         if sheet['properties']['title'] == 'Laundromat':
-            get_config(cookie, spreadsheet_id)
             return sheet['properties']['sheetId']
     return False
 
 
-def get_or_create_config_sheet_id(cookie, spreadsheet_id):
-    creds_dict = cookie.session.get('google_credentials')
-    creds = pickle.loads(creds_dict['pickled'])
-    service = build('sheets', 'v4', credentials=creds)
+def get_or_create_config_sheet_id(credentials, spreadsheet_id):
+    service = get_service(credentials)
 
-    sheet_id = is_configured(cookie, spreadsheet_id)
+    sheet_id = is_configured(credentials, spreadsheet_id)
     if sheet_id is False:
         requests = [{
             "addSheet": {
@@ -130,12 +118,9 @@ def get_or_create_config_sheet_id(cookie, spreadsheet_id):
     return sheet_id
 
 
-def configure_spreadsheet(cookie, spreadsheet_id, config):
-    sheet_id = get_or_create_config_sheet_id(cookie, spreadsheet_id)
-
-    creds_dict = cookie.session.get('google_credentials')
-    creds = pickle.loads(creds_dict['pickled'])
-    service = build('sheets', 'v4', credentials=creds)
+def configure_spreadsheet(credentials, spreadsheet_id, config):
+    sheet_id = get_or_create_config_sheet_id(credentials, spreadsheet_id)
+    service = get_service(credentials)
     path = config['repo_path']
     if path.startswith('/'):
         path = path[1:]
@@ -238,10 +223,8 @@ def configure_spreadsheet(cookie, spreadsheet_id, config):
     return results
 
 
-def get_config(cookie, spreadsheet_id):
-    creds_dict = cookie.session.get('google_credentials')
-    creds = pickle.loads(creds_dict['pickled'])
-    service = build('sheets', 'v4', credentials=creds)
+def get_config(credentials, spreadsheet_id):
+    service = get_service(credentials)
     datarange = 'Laundromat!A1:G2'
     result = service.spreadsheets().values().get(
         spreadsheetId=spreadsheet_id,
@@ -262,8 +245,6 @@ def get_config(cookie, spreadsheet_id):
         config['skip_pr'] = False
     elif config['skip_pr'] == "TRUE":
         config['skip_pr'] = True
-
-    cookie.session.set('config', config)
     return config
 
 
@@ -297,9 +278,8 @@ def columnToLetter(column):
     return letter
 
 
-def get_data(cookie, spreadsheet_id):
-    config = get_config(cookie, spreadsheet_id)
-    metadata = get_spreadsheet_raw(cookie, spreadsheet_id)
+def get_data(credentials, spreadsheet_id, config):
+    metadata = get_spreadsheet_raw(credentials, spreadsheet_id)
     for item in metadata['sheets']:
         if item['properties']['title'] == config['sheet_name']:
             max_row = item['properties']['gridProperties']['rowCount']
@@ -307,10 +287,7 @@ def get_data(cookie, spreadsheet_id):
                 item['properties']['gridProperties']['columnCount'])
     datarange = f'{config["sheet_name"]}!A1:{max_column}{max_row}'
 
-    creds_dict = cookie.session.get('google_credentials')
-    creds = pickle.loads(creds_dict['pickled'])
-    service = build('sheets', 'v4', credentials=creds)
-
+    service = get_service(credentials)
     result = service.spreadsheets().values().get(
         spreadsheetId=spreadsheet_id,
         range=datarange,
