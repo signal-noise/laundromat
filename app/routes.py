@@ -237,7 +237,8 @@ def sync():
     context['description'] = ""
 
     csv_str = get_data(c, c.session.get('spreadsheet_id'))
-    if (send_file(c, csv_str)):
+    outcome = send_file(c, csv_str)
+    if (outcome is True):
         c.session.set('message', 'Sync completed successfully')
         c.session.set('message_context', 'success')
         return c.redirect('/')
