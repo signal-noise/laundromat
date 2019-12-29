@@ -31,20 +31,18 @@ def get_auth_url():
     return oauth.github.authorize_redirect(redirect_uri)
 
 
-def complete_auth(cookie):
-    token = oauth.github.authorize_access_token()
-    cookie.session.set('github_credentials', token)
-    return
+def complete_auth():
+    return oauth.github.authorize_access_token()
 
 
 #
 # Getting lists and metadata for UI etc
 #
 
-def get_all_repos(cookie):
+def get_all_repos(credentials):
     resp = oauth.github.get(
         '/user/repos?sort="pushed"',
-        token=cookie.session.get('github_credentials'))
+        token=credentials)
     return resp.json()
 
 
@@ -52,13 +50,13 @@ def get_all_repos(cookie):
 # CSV import
 #
 
-def check_if_file_exists(cookie):
-    config = cookie.session.get('config')
-    url = (f'/repos/{config["repo_name"]}/contents/'
-           f'{config["repo_path"]}{config["file_name"]}')
+def sha_if_file_exists(credentials, repo_name, path, file_name):
+    url = (f'/repos/{repo_name}/contents/'
+           f'{path}{file_name}')
     resp = oauth.github.get(
         url,
-        token=cookie.session.get('github_credentials')).json()
+        token=credentials
+    ).json()
     if 'message' in resp and resp['message'] == 'Not Found':
         return False
     elif 'type' in resp and (
@@ -69,26 +67,26 @@ def check_if_file_exists(cookie):
         return False
 
 
-def create_branch(cookie, config, branch):
+def create_branch(credentials, repo_name, pr_target, branch):
     resp = oauth.github.get(
-        f'repos/{config["repo_name"]}/git/refs/heads/{config["pr_target"]}',
-        token=cookie.session.get('github_credentials'),
+        f'repos/{repo_name}/git/refs/heads/{pr_target}',
+        token=credentials,
     ).json()
     sha = resp['object']['sha']
     resp = oauth.github.post(
-        f'repos/{config["repo_name"]}/git/refs',
+        f'repos/{repo_name}/git/refs',
         json={
             'sha': sha,
             'ref': f'refs/heads/{branch}',
         },
-        token=cookie.session.get('github_credentials'),
+        token=credentials,
     ).json()
     return resp
 
 
-def write_file(cookie, config, branch, data, file_sha=False):
-    url = (f'/repos/{config["repo_name"]}/contents/'
-           f'{config["repo_path"]}{config["file_name"]}')
+def write_file(credentials, repo_name, path, file_name, branch, data, file_sha=False):
+    url = (f'/repos/{repo_name}/contents/'
+           f'{path}{file_name}')
 
     params = {
         'message': 'Automatically committed by the Laundromat',
@@ -102,35 +100,38 @@ def write_file(cookie, config, branch, data, file_sha=False):
     oauth.github.put(
         url,
         json=params,
-        token=cookie.session.get('github_credentials'),
+        token=credentials,
     ).json()
 
 
-def create_pr(cookie, config, branch):
+def create_pr(credentials, repo_name, pr_target, branch):
     params = {
         'title': 'CSV updated',
         'head': branch,
-        'base': config["pr_target"],
+        'base': pr_target,
         'body': 'PR automatically created by Laundromat',
     }
     resp = oauth.github.post(
-        f'repos/{config["repo_name"]}/pulls',
+        f'repos/{repo_name}/pulls',
         json=params,
-        token=cookie.session.get('github_credentials'),
+        token=credentials,
     ).json()
     return resp
 
 
-def send_file(cookie, data):
-    config = cookie.session.get('config')
-    file_sha = check_if_file_exists(cookie)
+def send_file(credentials, config, data):
+    file_sha = sha_if_file_exists(
+        credentials, config['repo_name'], config['repo_path'], config['file_name'])
 
     branch = config['repo_branch']
     if branch == '__auto__':
         branch = f'laundromat_{str(datetime.datetime.now().timestamp())[0:10]}'
-        create_branch(cookie, config, branch)
-    write_file(cookie, config, branch, data, file_sha)
-    create_pr(cookie, config, branch)
+        create_branch(credentials,
+                      config['repo_name'], config['pr_target'], branch)
+    write_file(credentials,
+               config['repo_name'], config['repo_path'], config['file_name'], branch, data, file_sha)
+    create_pr(credentials,
+              config['repo_name'], config['pr_target'], branch)
 
     # TODO verify this is actually working before returning true
 

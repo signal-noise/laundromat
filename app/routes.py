@@ -117,7 +117,8 @@ def trigger_github_auth():
 @app.route('/github_oauth2callback')
 def process_github_auth_response():
     c = Cookie(request)
-    complete_github_auth(c)
+    token = complete_github_auth()
+    c.session.set('github_credentials', token)
     c.session.set('message', "Github login succeeded")
     c.session.set('message_context', 'success')
     return c.redirect('/')
@@ -162,7 +163,7 @@ def repos():
     context['google_creds'] = c.session.get('google_credentials')
     context['github_creds'] = c.session.get('github_credentials')
 
-    repos = get_all_repos(c)
+    repos = get_all_repos(c.session.get('github_credentials'))
     context['data'] = repos
     context['title'] = "Select a repository"
     context['instruction'] = "Choose which repository to connect to this sheet"
@@ -237,7 +238,8 @@ def sync():
     context['description'] = ""
 
     csv_str = get_data(c, c.session.get('spreadsheet_id'))
-    outcome = send_file(c, csv_str)
+    outcome = send_file(context['github_creds'],
+                        c.session.get('config'), csv_str)
     if (outcome is True):
         c.session.set('message', 'Sync completed successfully')
         c.session.set('message_context', 'success')
