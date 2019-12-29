@@ -1,6 +1,7 @@
 import os
 import pickle
 from flask import request, url_for
+from google.auth.exceptions import RefreshError
 from app import app
 from app.google import (
     complete_auth as complete_google_auth,
@@ -57,12 +58,26 @@ def index():
     else:
         context['repo_name'] = c.session.get('repo_name')
 
-    context['sheet_is_setup'] = (
-        context['google_creds'] is not None and
-        context['spreadsheet_id'] is not None and
-        is_configured(
-            context['google_creds'],
-            context['spreadsheet_id']) is not False)
+    try:
+        context['sheet_is_setup'] = (
+            context['google_creds'] is not None and
+            context['spreadsheet_id'] is not None and
+            is_configured(
+                context['google_creds'],
+                context['spreadsheet_id']) is not False)
+    except RefreshError:
+        context['title'] = "Google Authentication expired"
+        context['instruction'] = (
+            "You need to login to Google again.")
+        context['action'] = url_for('trigger_google_auth')
+        context['cta'] = "Login with Google"
+        return c.render_template(context=context)
+
+    context['auto'] = request.args.get('auto')
+    if context['auto'] is not None:
+        c.session.set('auto', context['auto'])
+    else:
+        context['auto'] = c.session.get('auto')
 
     if context['google_creds'] is None or context['google_creds'] == {}:
         context['title'] = "Login"
@@ -87,15 +102,23 @@ def index():
     elif context['sheet_is_setup'] is False:
         return c.redirect(url_for('setup_sheet'))
     else:
-        if request.args.get('auto') == 'true':
+        if context['auto'] == 'true':
             return c.redirect(url_for('sync'))
 
-        context['title'] = "Ready for service wash!"
-        context['instruction'] = (
-            "All checks completed. Setup your sheet for"
-            " easier direct sync in future.")
-        context['action'] = url_for('instructions')
-        context['cta'] = "Set your sheet up"
+        if request.args.get('complete') == 'true':
+            context['title'] = "All done"
+            context['instruction'] = (
+                "Your sheet has been sent to "
+                f'<a href="https://github.com/{c.session.get("config").get("repo_name")}/pulls">'
+                f'the repo</a>'
+                " and is ready for you to pick up there.")
+        else:
+            context['title'] = "Ready for service wash!"
+            context['instruction'] = (
+                "All checks completed. Setup your sheet for"
+                " easier direct sync in future.")
+            context['action'] = url_for('instructions')
+            context['cta'] = "Set your sheet up"
 
     return c.render_template(context=context)
 
@@ -154,7 +177,16 @@ def logout():
 def sheets():
     c, context = init_request_vars()
 
-    sheets = get_all_spreadsheets(c.session.get('google_credentials'))
+    try:
+        sheets = get_all_spreadsheets(c.session.get('google_credentials'))
+    except RefreshError:
+        context['title'] = "Google Authentication expired"
+        context['instruction'] = (
+            "You need to login to Google again.")
+        context['action'] = url_for('trigger_google_auth')
+        context['cta'] = "Login with Google"
+        return c.render_template(context=context)
+
     context['data'] = sheets
     context['title'] = "Select a sheet"
     context['instruction'] = "Choose which sheet to send to the Laundromat"
@@ -186,6 +218,18 @@ def repos():
 @app.route('/setup_sheet', methods=['GET', 'POST'])
 def setup_sheet():
     c, context = init_request_vars()
+
+    try:
+        context['all_sheets'] = get_sheets(
+            context['google_creds'], c.session.get('spreadsheet_id'))
+    except RefreshError:
+        context['title'] = "Google Authentication expired"
+        context['instruction'] = (
+            "You need to login to Google again.")
+        context['action'] = url_for('trigger_google_auth')
+        context['cta'] = "Login with Google"
+        return c.render_template(context=context)
+
     context['spreadsheet_name'] = c.session.get('spreadsheet_name')
 
     context['title'] = "Setup the sheet"
@@ -197,9 +241,6 @@ def setup_sheet():
         " which will be created on your selected spreadsheet. In future you"
         "  can edit this sheet directly, being careful since typos can break"
         " the script")
-
-    context['all_sheets'] = get_sheets(
-        context['google_creds'], c.session.get('spreadsheet_id'))
 
     if request.method == 'POST':
         if c.session.get('repo_name') != request.form.get("repo_name"):
@@ -236,20 +277,42 @@ def setup_sheet():
 @app.route('/sync')
 def sync():
     c, context = init_request_vars()
+    if (context['google_creds'] is None or
+            context['google_creds'] == {} or
+            context['github_creds'] is None or
+            context['github_creds'] == {}):
+        url = '/?auto=true'
+        if request.args.get('s') is not None:
+            url += f'&s={request.args.get("s")}'
+        if request.args.get('n') is not None:
+            url += f'&n={request.args.get("n")}'
+        return c.redirect(url)
     context['title'] = "Sync"
     context['instruction'] = "probably set a message and redirect i guess"
     context['description'] = ""
 
-    config = get_config(context['github_creds'],
-                        c.session.get('spreadsheet_id'))
+    try:
+        config = get_config(context['google_creds'],
+                            c.session.get('spreadsheet_id'))
+    except RefreshError:
+        context['title'] = "Google Authentication expired"
+        context['instruction'] = (
+            "You need to login to Google again.")
+        context['action'] = url_for('trigger_google_auth')
+        context['cta'] = "Login with Google"
+        return c.render_template(context=context)
+
     c.session.set('config', config)
-    csv_str = get_data(c, c.session.get('spreadsheet_id'), config)
+    csv_str = get_data(context['google_creds'],
+                       c.session.get('spreadsheet_id'), config)
     outcome = send_file(context['github_creds'],
                         c.session.get('config'), csv_str)
+
     if (outcome is True):
         c.session.set('message', 'Sync completed successfully')
         c.session.set('message_context', 'success')
-        return c.redirect('/')
+        c.session.delete('auto')
+        return c.redirect('/?complete=true')
     else:
         context['message'] = 'Something went wrong'
         context['message_context'] = 'error'
@@ -264,3 +327,15 @@ def instructions():
     context['cta'] = "Just sync the data now"
     context['base_url'] = os.environ.get('BASE_URL')
     return c.render_template('instructions.html', context=context)
+
+
+@app.errorhandler(404)
+def not_found_error(error):
+    c, _ = init_request_vars()
+    return c.render_template('404.html'), 404
+
+
+@app.errorhandler(500)
+def internal_error(error):
+    c, _ = init_request_vars()
+    return c.render_template('500.html'), 500

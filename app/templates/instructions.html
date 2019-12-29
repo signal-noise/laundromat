@@ -39,7 +39,7 @@
   }
   
   function send() {
-    var url = '{{ base_url }}/?s=&auto=true';
+    var url = '{{ base_url }}/sync?s=' + SpreadsheetApp.getActive().getId() + '&n=' + SpreadsheetApp.getActive().getName();
     
     var options = {
       "method"  : "GET",   
