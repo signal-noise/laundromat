@@ -39,7 +39,7 @@
   }
   
   function send() {
-    var url = 'https://laundromat.signal-noise.co.uk/?s=&auto=true';
+    var url = '{{ base_url }}/?s=&auto=true';
     
     var options = {
       "method"  : "GET",   
@@ -61,14 +61,14 @@
   }
   
   function configure() {
-    var html = '<html><body><a href="https://laundromat.signal-noise.co.uk" target="blank" onclick="google.script.host.close()">Open Laundromat</a></body></html>';
+    var html = '<html><body><a href="{{ base_url }}" target="blank" onclick="google.script.host.close()">Open Laundromat</a></body></html>';
     var ui = HtmlService.createHtmlOutput(html)
     SpreadsheetApp.getUi().showModelessDialog(ui,"demo");
   }</pre>
   </li>
   <li>
-    Choose File > save in the editor interface, then refresh your spreadsheet
-    window.
+    Choose File > save in the editor interface, choose a project name, then
+    refresh your spreadsheet window.
     <br /><img
       src="{{ url_for('.static', filename='instructions-finalmenu.png') }}"
       style="height:150px;"

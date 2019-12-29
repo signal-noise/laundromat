@@ -1,3 +1,4 @@
+import os
 import pickle
 from flask import request, url_for
 from app import app
@@ -258,4 +259,5 @@ def instructions():
     c, context = init_request_vars()
     context['action'] = url_for('sync')
     context['cta'] = "Just sync the data now"
+    context['base_url'] = os.environ.get('BASE_URL')
     return c.render_template('instructions.html', context=context)
