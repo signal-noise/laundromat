@@ -161,10 +161,14 @@ def trigger_github_auth():
 @app.route('/github_oauth2callback')
 def process_github_auth_response():
     c = Cookie(request)
-    token = complete_github_auth()
-    c.session.set('github_credentials', token)
-    c.session.set('message', "Github login succeeded")
-    c.session.set('message_context', 'success')
+    try:
+        token = complete_github_auth()
+        c.session.set('github_credentials', token)
+        c.session.set('message', "Github login succeeded")
+        c.session.set('message_context', 'success')
+    except Exception:
+        c.session.set('message', "Github login failed")
+        c.session.set('message_context', 'error')
     return c.redirect('/')
 
 
