@@ -58,20 +58,21 @@ def index():
     else:
         context['repo_name'] = c.session.get('repo_name')
 
-    try:
-        context['sheet_is_setup'] = (
-            context['google_creds'] is not None and
-            context['spreadsheet_id'] is not None and
-            is_configured(
-                context['google_creds'],
-                context['spreadsheet_id']) is not False)
-    except RefreshError:
-        context['title'] = "Google Authentication expired"
-        context['instruction'] = (
-            "You need to login to Google again.")
-        context['action'] = url_for('trigger_google_auth')
-        context['cta'] = "Login with Google"
-        return c.render_template(context=context)
+    context['sheet_is_setup'] = False
+    if (context['google_creds'] is not None and
+            context['spreadsheet_id'] is not None):
+        try:
+            if is_configured(
+                    context['google_creds'],
+                    context['spreadsheet_id']) is not False:
+                context['sheet_is_setup'] = True
+        except RefreshError:
+            context['title'] = "Google Authentication expired"
+            context['instruction'] = (
+                "You need to login to Google again.")
+            context['action'] = url_for('trigger_google_auth')
+            context['cta'] = "Login with Google"
+            return c.render_template(context=context)
 
     context['auto'] = request.args.get('auto')
     if context['auto'] is not None:
@@ -331,11 +332,11 @@ def instructions():
 
 @app.errorhandler(404)
 def not_found_error(error):
-    c, _ = init_request_vars()
-    return c.render_template('404.html'), 404
+    c, context = init_request_vars()
+    return c.render_template('404.html', context=context), 404
 
 
 @app.errorhandler(500)
 def internal_error(error):
-    c, _ = init_request_vars()
-    return c.render_template('500.html'), 500
+    c, context = init_request_vars()
+    return c.render_template('500.html', context=context), 500
