@@ -29,42 +29,21 @@
   </li>
   <li>
     Delete any code in the script editor, and paste in the following:
-    <pre>function onOpen() {
-    var ui = SpreadsheetApp.getUi();
-    ui.createMenu('Laundromat')
-        .addItem('Send sheet', 'send')
-        .addSeparator()
-        .addItem('Configure', 'configure')
-        .addToUi();
-  }
-  
-  function send() {
-    var url = '{{ base_url }}/sync?s=' + SpreadsheetApp.getActive().getId() + '&n=' + SpreadsheetApp.getActive().getName();
-    
-    var options = {
-      "method"  : "GET",   
-      "followRedirects" : true,
-      "muteHttpExceptions": true
-    };
-      
-    var result = UrlFetchApp.fetch(url, options);
-    
-    if (result.getResponseCode() == 200) {
-      var params = JSON.parse(result.getContentText());
-      SpreadsheetApp.getUi()
-      .alert('Sheet sent to Laundromat successfully');
-    }
-    else {
-      SpreadsheetApp.getUi()
-      .alert('Something went wrong with laundromat, try using the tool directly.');
-    }
-  }
-  
-  function configure() {
-    var html = '<html><body><a href="{{ base_url }}" target="blank" onclick="google.script.host.close()">Open Laundromat</a></body></html>';
-    var ui = HtmlService.createHtmlOutput(html)
-    SpreadsheetApp.getUi().showModelessDialog(ui,"demo");
-  }</pre>
+    <pre>
+function onOpen() {
+  var ui = SpreadsheetApp.getUi();
+  ui.createMenu('Laundromat')
+  .addItem('Send sheet', 'send')
+  .addToUi();
+}
+
+function send() {
+  var url = '{{ url_for("sync", external=True, _scheme="https") }}?s=' + SpreadsheetApp.getActive().getId() + '&n=' + SpreadsheetApp.getActive().getName();
+  var html = '&lt;html&gt;&lt;body&gt;&lt;a href="'+url+'" target="blank" onclick="google.script.host.close()"&gt;Send to Repo&lt;/a&gt;&lt;/body&gt;&lt;/html&gt;';
+  var ui = HtmlService.createHtmlOutput(html)
+  SpreadsheetApp.getUi().showModelessDialog(ui,"Laundromat");
+}
+    </pre>
   </li>
   <li>
     Choose File > save in the editor interface, choose a project name, then
