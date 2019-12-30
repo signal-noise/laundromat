@@ -29,7 +29,8 @@
   </li>
   <li>
     Delete any code in the script editor, and paste in the following:
-    <pre>function onOpen() {
+    <pre>
+  function onOpen() {
     var ui = SpreadsheetApp.getUi();
     ui.createMenu('Laundromat')
         .addItem('Send sheet', 'send')
@@ -39,7 +40,7 @@
   }
   
   function send() {
-    var url = '{{ base_url }}/sync?s=' + SpreadsheetApp.getActive().getId() + '&n=' + SpreadsheetApp.getActive().getName();
+    var url = '{{ url_for("sync", external=True, _scheme="https") }}?s=' + SpreadsheetApp.getActive().getId() + '&n=' + SpreadsheetApp.getActive().getName();
     
     var options = {
       "method"  : "GET",   
@@ -61,10 +62,12 @@
   }
   
   function configure() {
-    var html = '<html><body><a href="{{ base_url }}" target="blank" onclick="google.script.host.close()">Open Laundromat</a></body></html>';
+    var html = '&lt;html&gt;&lt;body&gt;&lt;a href="{{ base_url }}" target="blank" onclick="google.script.host.close()"&gt;Open Laundromat&lt;/a&gt;&lt;/body&gt;&lt;/html&gt;';
     var ui = HtmlService.createHtmlOutput(html)
     SpreadsheetApp.getUi().showModelessDialog(ui,"demo");
-  }</pre>
+  }
+
+    </pre>
   </li>
   <li>
     Choose File > save in the editor interface, choose a project name, then
