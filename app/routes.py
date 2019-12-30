@@ -167,7 +167,8 @@ def process_github_auth_response():
         c.session.set('message', "Github login succeeded")
         c.session.set('message_context', 'success')
     except Exception:
-        c.session.set('message', "Github login failed")
+        c.session.set(
+            'message', f'Github login failed: {request.args.get("error_description")}')
         c.session.set('message_context', 'error')
     return c.redirect('/')
 
