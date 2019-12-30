@@ -60,6 +60,7 @@ def index():
 
     context['sheet_is_setup'] = False
     if (context['google_creds'] is not None and
+            context['google_creds'] != {} and
             context['spreadsheet_id'] is not None):
         try:
             if is_configured(
