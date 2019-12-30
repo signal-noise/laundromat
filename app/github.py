@@ -27,7 +27,10 @@ oauth.register(
 
 
 def get_auth_url():
-    redirect_uri = url_for('process_github_auth_response', _external=True)
+    redirect_uri = url_for('process_github_auth_response',
+                           _external=True,
+                           _scheme='https',
+                           )
     return oauth.github.authorize_redirect(redirect_uri)
 
 
