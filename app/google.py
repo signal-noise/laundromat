@@ -28,7 +28,9 @@ def get_flow(state=None):
 
     flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
         *args, **kwargs)
-    flow.redirect_uri = url_for('process_google_auth_response', _external=True)
+    flow.redirect_uri = url_for('process_google_auth_response',
+                                _external=True,
+                                _scheme='https',)
     return flow
 
 
