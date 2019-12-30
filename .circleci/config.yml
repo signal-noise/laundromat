@@ -32,7 +32,7 @@ jobs:
             gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
             # gcloud components update
       - run:
-          name: Build, push and deploy container
+          name: Build container
           command: |
             docker build \
               --build-arg SECRET_KEY=${SECRET_KEY} \
@@ -41,8 +41,14 @@ jobs:
               --build-arg BASE_URL=${BASE_URL} \
               -t eu.gcr.io/${GOOGLE_PROJECT_ID}/laundromat:${VERSION} \
               .
+      - run:
+          name: Push container
+          command: |
             docker tag eu.gcr.io/${GOOGLE_PROJECT_ID}/laundromat:${VERSION} eu.gcr.io/${GOOGLE_PROJECT_ID}/laundromat:latest
             docker push eu.gcr.io/${GOOGLE_PROJECT_ID}/laundromat:${VERSION}
+      - run:
+          name: Deploy container
+          command: |
             gcloud run deploy ${ENVIRONMENT} \
               --async \
               --image eu.gcr.io/${GOOGLE_PROJECT_ID}/laundromat:${VERSION} \
