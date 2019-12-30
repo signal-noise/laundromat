@@ -84,17 +84,19 @@ def index():
     if context['google_creds'] is None or context['google_creds'] == {}:
         context['title'] = "Login"
         context['instruction'] = (
-            "You need to sign in with your Google Account"
-            " before you can go any further, in order"
-            " to access your spreadsheets")
+            "To access your Google Spreadsheets, you "
+            "need to sign in with your Google Account"
+            " before you can go any further."
+        )
         context['action'] = url_for('trigger_google_auth')
         context['cta'] = "Login with Google"
     elif context['github_creds'] is None or context['github_creds'] == {}:
         context['title'] = "Login again"
         context['instruction'] = (
-            "You need to sign in with your Github Account"
-            " before you can go any further, in order"
-            " to access your repositories")
+            "To access your Github repository, "
+            "you need to sign in with your Github Account"
+            " before you can go any further."
+        )
         context['action'] = url_for('trigger_github_auth')
         context['cta'] = "Login with Github"
     elif context['spreadsheet_id'] is None:
