@@ -206,6 +206,7 @@ def sheets():
         "if you don't see the one you expect please edit it and "
         "refresh this page.")
     context['choice_var'] = 's'
+    context['icon'] = 'sheets-icon.jpg'
     return c.render_template('chooser.html', context=context)
 
 
@@ -223,6 +224,7 @@ def repos():
         "refresh this page.")
     context['choice_var'] = 'r'
     context['name_field'] = 'full_name'
+    context['icon'] = 'github-icon.jpg'
     return c.render_template('chooser.html', context=context)
 
 
