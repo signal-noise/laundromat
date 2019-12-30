@@ -32,7 +32,7 @@ G Suite / Github permissions?
 
 # Developing
 
-Set up a GCP Project. Set up a [Firestore](https://console.cloud.google.com/firestore/data) (native) database. You'll need a service account and JSON file along with it. The service account needs thr `Firebase Rules System` permission.
+Set up a GCP Project. Set up a [Firestore](https://console.cloud.google.com/firestore/data) (native) database. You'll need a service account and JSON file along with it. The service account needs thr `Firebase Rules System` permission. You also need to set up Cloud Run and the Container Registry API.
 
 Use the [Library](https://console.developers.google.com/apis/library) page to select the Sheets API and Drive API and enable both. 
 

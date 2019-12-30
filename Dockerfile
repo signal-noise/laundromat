@@ -21,6 +21,9 @@ ENV FLASK_RUN_PORT $PORT
 ENV FLASK_ENV production
 ENV BASE_URL ${BASE_URL}}
 
+RUN mkdir -p /config
+COPY ./config /config/
+
 COPY . /code/
 WORKDIR /code
 
