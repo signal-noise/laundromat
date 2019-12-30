@@ -49,12 +49,13 @@ jobs:
       - run:
           name: Deploy container
           command: |
+            SAFE_VERSION=$(echo ${VERSION} | tr . _)
             gcloud run deploy ${ENVIRONMENT} \
               --async \
               --image eu.gcr.io/${GOOGLE_PROJECT_ID}/laundromat:${VERSION} \
               --platform managed \
               --allow-unauthenticated \
-              --labels=version=${VERSION} \
+              --labels=version=${SAFE_VERSION} \
               --region europe-west1 \
               --memory 512M
 
