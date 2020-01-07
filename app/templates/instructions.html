@@ -38,7 +38,7 @@ function onOpen() {
 }
 
 function send() {
-  var url = '{{ url_for("sync", external=True, _scheme="https") }}?s=' + SpreadsheetApp.getActive().getId() + '&n=' + SpreadsheetApp.getActive().getName();
+  var url = '{{ url_for("sync", _external=True, _scheme="https") }}?s=' + SpreadsheetApp.getActive().getId() + '&n=' + SpreadsheetApp.getActive().getName();
   var html = '&lt;html&gt;&lt;body&gt;&lt;a href="'+url+'" target="blank" onclick="google.script.host.close()"&gt;Send to Repo&lt;/a&gt;&lt;/body&gt;&lt;/html&gt;';
   var ui = HtmlService.createHtmlOutput(html)
   SpreadsheetApp.getUi().showModelessDialog(ui,"Laundromat");
