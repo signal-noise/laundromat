@@ -284,12 +284,11 @@ def to_csv_string(data):
 
 
 def columnToLetter(column):
-    letter = ''
+    letters = ""
     while column > 0:
-        temp = (column - 1) % 26
-        letter += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[temp]
-        column = (column - temp - 1) / 26
-    return letter
+        column, remainder = divmod(column - 1, 26)
+        letters = chr(65 + remainder) + letters
+    return letters
 
 
 def get_data(credentials, spreadsheet_id, config):
