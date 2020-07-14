@@ -143,13 +143,13 @@ def send_files(credentials, config, files):
             credentials,
             config['repo_name'],
             config['repo_path'],
-            current_file.file_name)
+            current_file['file_name'])
         write_file(credentials,
                 config['repo_name'],
                 config['repo_path'],
-                current_file.file_name,
+                current_file['file_name'],
                 branch,
-                current_file.data,
+                current_file['data'],
                 file_sha)
 
     if (config['skip_pr'] != 'on' and
