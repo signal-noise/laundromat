@@ -17,7 +17,7 @@ from app.github import (
     complete_auth as complete_github_auth,
     get_all_repos,
     get_auth_url as get_github_auth_url,
-    send_file,
+    send_files,
 )
 from app.cookie import Cookie
 
@@ -318,18 +318,22 @@ def sync():
     if (config["sheet_name"] == "all")
         all_sheets = get_sheets(
             context['google_creds'], c.session.get('spreadsheet_id'))
+        files = []
         for sheet in all_sheets:
             csv_str = get_data(context['google_creds'],
                             c.session.get('spreadsheet_id'), config, sheet)
-            outcome = send_file(context['github_creds'],
-                                c.session.get('config'), csv_str, f'{sheet}.csv')
-            if(outcome is False):
-                break;
+            files.append({
+                file_name: f'{sheet}.csv',
+                data: csv_str
+            })
+
+        outcome = send_files(context['github_creds'],
+                            c.session.get('config'), files)
     else:
         csv_str = get_data(context['google_creds'],
                         c.session.get('spreadsheet_id'), config, config["sheet_name"])
-        outcome = send_file(context['github_creds'],
-                            c.session.get('config'), csv_str, config['file_name'])
+        outcome = send_files(context['github_creds'],
+                            c.session.get('config'), {file_name: config['file_name'], data: csv_str} )
 
     if (outcome is True):
         c.session.set('message', 'Sync completed successfully')
