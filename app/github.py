@@ -129,12 +129,12 @@ def create_pr(credentials, repo_name, pr_target, branch):
     return resp
 
 
-def send_file(credentials, config, data):
+def send_file(credentials, config, data, file_name):
     file_sha = sha_if_file_exists(
         credentials,
         config['repo_name'],
         config['repo_path'],
-        config['file_name'])
+        file_name)
 
     branch = config['repo_branch']
     if branch == '__auto__':
@@ -145,7 +145,7 @@ def send_file(credentials, config, data):
     write_file(credentials,
                config['repo_name'],
                config['repo_path'],
-               config['file_name'],
+               file_name,
                branch,
                data,
                file_sha)

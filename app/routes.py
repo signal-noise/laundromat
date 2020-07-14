@@ -314,10 +314,22 @@ def sync():
         return c.render_template(context=context)
 
     c.session.set('config', config)
-    csv_str = get_data(context['google_creds'],
-                       c.session.get('spreadsheet_id'), config)
-    outcome = send_file(context['github_creds'],
-                        c.session.get('config'), csv_str)
+
+    if (config["sheet_name"] == "all")
+        all_sheets = get_sheets(
+            context['google_creds'], c.session.get('spreadsheet_id'))
+        for sheet in all_sheets:
+            csv_str = get_data(context['google_creds'],
+                            c.session.get('spreadsheet_id'), config, sheet)
+            outcome = send_file(context['github_creds'],
+                                c.session.get('config'), csv_str, f'{sheet}.csv')
+            if(outcome is False):
+                break;
+    else:
+        csv_str = get_data(context['google_creds'],
+                        c.session.get('spreadsheet_id'), config, config["sheet_name"])
+        outcome = send_file(context['github_creds'],
+                            c.session.get('config'), csv_str, config['file_name'])
 
     if (outcome is True):
         c.session.set('message', 'Sync completed successfully')

@@ -291,14 +291,14 @@ def columnToLetter(column):
     return letters
 
 
-def get_data(credentials, spreadsheet_id, config):
+def get_data(credentials, spreadsheet_id, config, sheet_name):
     metadata = get_spreadsheet_metadata(credentials, spreadsheet_id)
     for item in metadata['sheets']:
-        if item['properties']['title'] == config['sheet_name']:
+        if item['properties']['title'] == sheet_name:
             max_row = item['properties']['gridProperties']['rowCount']
             max_column = columnToLetter(
                 item['properties']['gridProperties']['columnCount'])
-    datarange = f'{config["sheet_name"]}!A1:{max_column}{max_row}'
+    datarange = f'{sheet_name}!A1:{max_column}{max_row}'
 
     service = get_service(credentials)
     result = service.spreadsheets().values().get(
