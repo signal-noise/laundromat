@@ -13,6 +13,7 @@
     <label for="spreadsheet_sheet" class="col-sm-3 control-label">Sheet</label>
     <div class="col-sm-9">
       <select class="form-control" id="spreadsheet_sheet" name="spreadsheet_sheet">
+        <option value="__all__" {% if spreadsheet_sheet == "__all__" %} selected="selected"{% endif %}>All sheets</option>
       {% for sheet in all_sheets %}
         <option{% if sheet == spreadsheet_sheet %} selected="selected"{% endif %}>{{ sheet }}</option>
       {% endfor %}
