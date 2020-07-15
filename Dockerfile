@@ -20,7 +20,7 @@ ENV GOOGLE_APPLICATION_CREDENTIALS /config/service_account.json
 ENV FLASK_APP app
 ENV FLASK_RUN_PORT $PORT
 ENV FLASK_ENV production
-ENV BASE_URL ${BASE_URL}}
+ENV BASE_URL ${BASE_URL}
 
 RUN mkdir -p /config
 COPY ./config /config/
