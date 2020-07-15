@@ -322,19 +322,22 @@ def sync():
         files = []
         for sheet in all_sheets:
             csv_str = get_data(context['google_creds'],
-                            c.session.get('spreadsheet_id'), config, sheet)
+                               c.session.get('spreadsheet_id'), config, sheet)
             files.append({
                 "file_name": f'{slugify(sheet)}.csv',
                 "data": csv_str
             })
 
         outcome = send_files(context['github_creds'],
-                            c.session.get('config'), files)
+                             c.session.get('config'), files)
     else:
         csv_str = get_data(context['google_creds'],
-                        c.session.get('spreadsheet_id'), config, config["sheet_name"])
+                           c.session.get('spreadsheet_id'),
+                           config, config["sheet_name"])
         outcome = send_files(context['github_creds'],
-                            c.session.get('config'), [{"file_name": config['file_name'], "data": csv_str}] )
+                             c.session.get('config'),
+                             [{"file_name": config['file_name'],
+                               "data": csv_str}])
 
     if (outcome is True):
         c.session.set('message', 'Sync completed successfully')

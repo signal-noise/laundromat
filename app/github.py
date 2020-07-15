@@ -130,8 +130,6 @@ def create_pr(credentials, repo_name, pr_target, branch):
 
 
 def send_files(credentials, config, files):
-    
-
     branch = config['repo_branch']
     if branch == '__auto__':
         branch = f'laundromat_{str(datetime.datetime.now().timestamp())[0:10]}'
@@ -145,12 +143,12 @@ def send_files(credentials, config, files):
             config['repo_path'],
             current_file['file_name'])
         write_file(credentials,
-                config['repo_name'],
-                config['repo_path'],
-                current_file['file_name'],
-                branch,
-                current_file['data'],
-                file_sha)
+                   config['repo_name'],
+                   config['repo_path'],
+                   current_file['file_name'],
+                   branch,
+                   current_file['data'],
+                   file_sha)
 
     if (config['skip_pr'] != 'on' and
             config['skip_pr'] != 'true' and
