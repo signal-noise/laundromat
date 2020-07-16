@@ -9,3 +9,4 @@ google-auth-oauthlib==0.4.1
 google-cloud-firestore==1.6.0
 pytz==2019.3
 requests==2.22.0
+python-slugify==4.0.1

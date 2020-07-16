@@ -3,6 +3,7 @@ import pickle
 from flask import request, url_for
 from google.auth.exceptions import RefreshError
 from app import app
+from slugify import slugify
 from app.google import (
     complete_auth as complete_google_auth,
     configure_spreadsheet,
@@ -17,7 +18,7 @@ from app.github import (
     complete_auth as complete_github_auth,
     get_all_repos,
     get_auth_url as get_github_auth_url,
-    send_file,
+    send_files,
 )
 from app.cookie import Cookie
 
@@ -314,10 +315,29 @@ def sync():
         return c.render_template(context=context)
 
     c.session.set('config', config)
-    csv_str = get_data(context['google_creds'],
-                       c.session.get('spreadsheet_id'), config)
-    outcome = send_file(context['github_creds'],
-                        c.session.get('config'), csv_str)
+
+    if (config["sheet_name"] == "__all__"):
+        all_sheets = get_sheets(
+            context['google_creds'], c.session.get('spreadsheet_id'))
+        files = []
+        for sheet in all_sheets:
+            csv_str = get_data(context['google_creds'],
+                               c.session.get('spreadsheet_id'), config, sheet)
+            files.append({
+                "file_name": f'{slugify(sheet)}.csv',
+                "data": csv_str
+            })
+
+        outcome = send_files(context['github_creds'],
+                             c.session.get('config'), files)
+    else:
+        csv_str = get_data(context['google_creds'],
+                           c.session.get('spreadsheet_id'),
+                           config, config["sheet_name"])
+        outcome = send_files(context['github_creds'],
+                             c.session.get('config'),
+                             [{"file_name": config['file_name'],
+                               "data": csv_str}])
 
     if (outcome is True):
         c.session.set('message', 'Sync completed successfully')
