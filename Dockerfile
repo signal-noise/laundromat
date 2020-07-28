@@ -29,4 +29,4 @@ COPY . /code/
 WORKDIR /code
 
 EXPOSE $PORT
-CMD gunicorn --bind 0.0.0.0:$PORT manage:app --workers 3
+CMD gunicorn --bind 0.0.0.0:$PORT manage:app --workers 3 --timeout 0
