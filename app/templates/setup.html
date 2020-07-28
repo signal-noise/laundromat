@@ -18,6 +18,7 @@
         <option{% if sheet == spreadsheet_sheet %} selected="selected"{% endif %}>{{ sheet }}</option>
       {% endfor %}
     </select>
+    <span class="help-block">If you specify "All Sheets" every sheet will be committed. You may prefix sheet names with "__ignore__" to skip during sync.</span>
     </div>
   </div>
   <div class="form-group">
