@@ -88,7 +88,8 @@ def get_sheets(credentials, spreadsheet_id):
     return [x['properties']['title']
             for x in get_spreadsheet_metadata(
                 credentials, spreadsheet_id).get('sheets', [])
-            if x['properties']['title'] != 'Laundromat']
+            if x['properties']['title'] != 'Laundromat'
+            or not(x['properties']['title'].startswith("__ignore__"))]
 
 
 def is_configured(credentials, spreadsheet_id):
