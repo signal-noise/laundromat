@@ -29,7 +29,10 @@ def get_flow(state=None):
     if state is not None:
         kwargs["state"] = state
 
-    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(*args, **kwargs)
+    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+        *args,
+        **kwargs
+    )
     flow.redirect_uri = url_for(
         "process_google_auth_response", _external=True, _scheme="https",
     )
@@ -39,7 +42,9 @@ def get_flow(state=None):
 def get_auth_url():
     """Does the initial part of the auth request work"""
     flow = get_flow()
-    return flow.authorization_url(access_type="offline", include_granted_scopes="true")
+    return flow.authorization_url(
+        access_type="offline",
+        include_granted_scopes="true")
 
 
 def complete_auth(state, url):
@@ -83,21 +88,27 @@ def get_all_spreadsheets(credentials):
 
 def get_spreadsheet_metadata(credentials, spreadsheet_id):
     service = get_service(credentials)
-    results = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
+    results = service.spreadsheets().get(
+        spreadsheetId=spreadsheet_id).execute()
     return results
 
 
 def get_sheets(credentials, spreadsheet_id):
     return [
         x["properties"]["title"]
-        for x in get_spreadsheet_metadata(credentials, spreadsheet_id).get("sheets", [])
+        for x in get_spreadsheet_metadata(
+            credentials,
+            spreadsheet_id
+        ).get("sheets", [])
         if x["properties"]["title"] != "Laundromat"
         and not (x["properties"]["title"].startswith("__ignore__"))
     ]
 
 
 def is_configured(credentials, spreadsheet_id):
-    sheets = get_spreadsheet_metadata(credentials, spreadsheet_id).get("sheets", [])
+    sheets = get_spreadsheet_metadata(
+        credentials, spreadsheet_id
+    ).get("sheets", [])
     for sheet in sheets:
         if sheet["properties"]["title"] == "Laundromat":
             return sheet["properties"]["sheetId"]
@@ -112,7 +123,10 @@ def get_or_create_config_sheet_id(credentials, spreadsheet_id):
         requests = [{"addSheet": {"properties": {"title": "Laundromat"}}}]
         results = (
             service.spreadsheets()
-            .batchUpdate(spreadsheetId=spreadsheet_id, body={"requests": requests})
+            .batchUpdate(
+                spreadsheetId=spreadsheet_id,
+                body={"requests": requests}
+            )
             .execute()
         )
         sheet_id = results["replies"][0]["addSheet"]["properties"]["sheetId"]
@@ -127,63 +141,56 @@ def configure_spreadsheet(credentials, spreadsheet_id, config):
         path = path[1:]
     if not path.endswith("/"):
         path += "/"
-    requests = [
-        {
-            "updateCells": {
-                "start": {"sheetId": sheet_id, "rowIndex": 0, "columnIndex": 0},
-                "fields": "*",
-                "rows": [
+    requests = [{
+        "updateCells": {
+            "start": {"sheetId": sheet_id, "rowIndex": 0, "columnIndex": 0},
+            "fields": "*",
+            "rows": [{
+                "values": [
+                    {"userEnteredValue": {"stringValue": "sheet_name"}},
+                    {"userEnteredValue": {"stringValue": "repo_name"}},
+                    {"userEnteredValue": {"stringValue": "repo_branch"}},
+                    {"userEnteredValue": {"stringValue": "pr_target"}},
+                    {"userEnteredValue": {"stringValue": "skip_pr"}},
+                    {"userEnteredValue": {"stringValue": "repo_path"}},
+                    {"userEnteredValue": {"stringValue": "file_name"}},
+                ]},
+                {"values": [
                     {
-                        "values": [
-                            {"userEnteredValue": {"stringValue": "sheet_name"}},
-                            {"userEnteredValue": {"stringValue": "repo_name"}},
-                            {"userEnteredValue": {"stringValue": "repo_branch"}},
-                            {"userEnteredValue": {"stringValue": "pr_target"}},
-                            {"userEnteredValue": {"stringValue": "skip_pr"}},
-                            {"userEnteredValue": {"stringValue": "repo_path"}},
-                            {"userEnteredValue": {"stringValue": "file_name"}},
-                        ]
+                        "userEnteredValue": {
+                            "stringValue": config["spreadsheet_sheet"]
+                        }
                     },
+                    {"userEnteredValue": {"stringValue": config["repo_name"]}},
                     {
-                        "values": [
-                            {
-                                "userEnteredValue": {
-                                    "stringValue": config["spreadsheet_sheet"]
-                                }
-                            },
-                            {"userEnteredValue": {"stringValue": config["repo_name"]}},
-                            {
-                                "userEnteredValue": {
-                                    "stringValue": config["repo_branch"]
-                                }
-                            },
-                            {"userEnteredValue": {"stringValue": config["pr_target"]}},
-                            {
-                                "userEnteredValue": {
-                                    "boolValue": (
-                                        True if config["skip_pr"] == "on" else False
-                                    )
-                                }
-                            },
-                            {"userEnteredValue": {"stringValue": path}},
-                            {"userEnteredValue": {"stringValue": config["file_name"]}},
-                        ]
+                        "userEnteredValue": {
+                            "stringValue": config["repo_branch"]
+                        }
                     },
+                    {"userEnteredValue": {"stringValue": config["pr_target"]}},
                     {
-                        "values": [
-                            {
-                                "userEnteredValue": {
-                                    "stringValue": (
-                                        "Edit these values directly, or using the "
-                                        "Laundromat tool. Please don't edit the "
-                                        "heading names, and take care with typos."
-                                    )
-                                }
-                            },
-                        ]
+                        "userEnteredValue": {
+                            "boolValue": (
+                                True if config["skip_pr"] == "on" else False
+                            )
+                        }
                     },
-                ],
-            }
+                    {"userEnteredValue": {"stringValue": path}},
+                    {"userEnteredValue": {"stringValue": config["file_name"]}},
+                ]},
+                {"values": [
+                    {
+                        "userEnteredValue": {
+                            "stringValue": (
+                                "Edit these values directly, or using the "
+                                "Laundromat tool. Please don't edit the "
+                                "heading names, and take care with typos."
+                            )
+                        }
+                    },
+                ]},
+            ],
+        }
         }
     ]
     results = (
@@ -200,7 +207,11 @@ def get_config(credentials, spreadsheet_id):
     result = (
         service.spreadsheets()
         .values()
-        .get(spreadsheetId=spreadsheet_id, range=datarange, majorDimension="COLUMNS",)
+        .get(
+            spreadsheetId=spreadsheet_id,
+            range=datarange,
+            majorDimension="COLUMNS",
+        )
         .execute()
     )
 
@@ -271,4 +282,3 @@ def get_data(credentials, spreadsheet_id, config, sheet_name):
     )
 
     return to_csv_string(result["values"])
-
