@@ -1,6 +1,8 @@
 # Laundromat 🧺
 > Service to allow non-technical users to automatically commit google sheets CSVs into specific repositories
 
+**NB This project is functional and in use but essentially a proof of concept and needs a lot of refactoring and documentation improvement**
+
 # User flow
 
 Once set up, users will need to take the following set of steps
