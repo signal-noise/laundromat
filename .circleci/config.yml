@@ -6,8 +6,11 @@ jobs:
       - image: circleci/python:3.8
     steps:
       - checkout
-      - run: pip install --user -r requirements.txt
-      - run: flake8
+      - run:
+          name: Print Env Vars
+          command: |
+            printenv
+     
 
   build:
     docker:
@@ -15,50 +18,10 @@ jobs:
     steps:
       - setup_remote_docker
       - run:
-          name: Install docker client
+          name: Message
           command: |
-            apk update
-            apk add docker zip
-      - checkout
-      - run:
-          name: Authenticate and set defaults to environment
-          command: |
-            echo ${GCLOUD_SERVICE_KEY} > ${HOME}/gcloud-service-key.json
-            gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
-            cat ${HOME}/gcloud-service-key.json | docker login -u _json_key --password-stdin https://eu.gcr.io
-            mkdir -p config
-            echo ${GOOGLE_APPLICATION_CREDENTIALS} > config/service_account.json
-            echo ${GOOGLE_CLIENT_SECRET} > config/client_secret.json
-            gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
-            # gcloud components update
-      - run:
-          name: Build container
-          command: |
-            docker build \
-              --build-arg SECRET_KEY=${SECRET_KEY} \
-              --build-arg GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID} \
-              --build-arg GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET} \
-              --build-arg BASE_URL=${BASE_URL} \
-              -t eu.gcr.io/${GOOGLE_PROJECT_ID}/laundromat:${VERSION} \
-              .
-      - run:
-          name: Push container
-          command: |
-            docker tag eu.gcr.io/${GOOGLE_PROJECT_ID}/laundromat:${VERSION} eu.gcr.io/${GOOGLE_PROJECT_ID}/laundromat:latest
-            docker push eu.gcr.io/${GOOGLE_PROJECT_ID}/laundromat:${VERSION}
-      - run:
-          name: Deploy container
-          command: |
-            SAFE_VERSION=$(echo ${VERSION} | tr . _)
-            gcloud run deploy ${ENVIRONMENT} \
-              --async \
-              --image eu.gcr.io/${GOOGLE_PROJECT_ID}/laundromat:${VERSION} \
-              --platform managed \
-              --allow-unauthenticated \
-              --labels=version=${SAFE_VERSION} \
-              --region europe-west1 \
-              --memory 512M
-
+            echo hi
+      
 notify:
   webhooks:
     - url: https://dwlnd1wnmh.execute-api.eu-west-2.amazonaws.com/prod/circleci/webhook
